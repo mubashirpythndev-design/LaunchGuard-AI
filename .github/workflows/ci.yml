@@ -1,0 +1,61 @@
+name: LaunchGuard AI CI
+
+on:
+  push:
+    branches: [ main, 001-launchguard-mvp ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 12.6.0
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install Python Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e "./apps/api[dev]"
+
+      - name: Install Node Dependencies
+        run: pnpm install --frozen-lockfile=false
+
+      - name: Verify Contract Generation Drift
+        run: |
+          pnpm generate
+          git diff --exit-code packages/contract
+
+      - name: Backend Lint & Typecheck
+        run: |
+          cd apps/api
+          ruff check .
+          mypy --strict app cv agent rule_engine db
+
+      - name: Backend Tests
+        run: |
+          cd apps/api
+          pytest tests/unit -v
+
+      - name: Frontend Typecheck & Lint
+        run: |
+          pnpm --filter @launchguard/web typecheck
+          pnpm --filter @launchguard/web lint
+
+      - name: Frontend Tests
+        run: |
+          pnpm --filter @launchguard/web test
