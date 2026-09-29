@@ -1,0 +1,48 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Generated contract source
+packages/contract/src/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+*.egg-info/
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+
+# Databases and Local State
+*.db
+*.sqlite
+*.sqlite3
+launchguard.db
+checkpoints.sqlite
+
+# Media uploads & artifacts
+media/
+data/
+
+# Next.js build output
+.next/
+out/
+
+# Environment files
+.env
+.env*.local
+apps/api/.env
+apps/web/.env*
+
+# Testing & logs
+coverage/
+playwright-report/
+test-results/
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
