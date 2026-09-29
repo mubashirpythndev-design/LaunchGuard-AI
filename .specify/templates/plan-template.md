@@ -24,14 +24,61 @@
 **Target Platform**: [e.g., Linux server, iOS 15+, WASM or NEEDS CLARIFICATION]
 **Project Type**: [single/web/mobile - determines source structure]  
 **Performance Goals**: [domain-specific, e.g., 1000 req/s, 10k lines/sec, 60 fps or NEEDS CLARIFICATION]  
-**Constraints**: [domain-specific, e.g., <200ms p95, <100MB memory, offline-capable or NEEDS CLARIFICATION]  
+**Constraints**: [domain-specific, e.g., <200ms p95, <100MB memory, offline-capable or NEEDS CLARIFICATION]
 **Scale/Scope**: [domain-specific, e.g., 10k users, 1M LOC, 50 screens or NEEDS CLARIFICATION]
+
+<!--
+  LaunchGuard AI defaults fixed by the Constitution — copy these unless a Complexity Tracking
+  entry justifies a deviation:
+
+    Language/Version:      TypeScript 5 (strict) + Python 3.11
+    Primary Dependencies:  Next.js (App Router), FastAPI, OpenCV, YOLOv8
+    Storage:               SQLite via SQLAlchemy (swappable)
+    Testing:               Vitest + RTL, Playwright, Pytest
+    Project Type:          web (two deployables — see Structure Decision)
+
+  Performance Goals and Constraints remain unspecified by the constitution. For this product they
+  MUST be measurable and stated here, e.g. time from upload to streamed verdict, and the maximum
+  frame interval for the live monitor. Treat an unstated value as NEEDS CLARIFICATION.
+-->
+
 
 ## Constitution Check
 
 *GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
+*Source: `.specify/memory/constitution.md`. Every MUST below is blocking; a violation must be
+resolved by changing the plan, or justified in Complexity Tracking — never by reinterpreting the
+principle.*
 
-[Gates determined based on constitution file]
+- [ ] **S1 Deterministic verdict** — Is the GO / HOLD / NO-GO verdict produced by a rule
+  engine over structured findings, with the LLM limited to explaining, recommending, and
+  escalating? (Constitution 2.I)
+- [ ] **S2 Fail safe** — Does every error, timeout, and low-confidence path yield
+  `severity: "warning"`, and do missing mandatory checklist inputs yield `HOLD`? (2.II)
+- [ ] **S3 Explainable** — Does every finding carry module, check id, severity, message,
+  confidence, metrics, and an overlay when visual? (2.III)
+- [ ] **S4 Honest uncertainty** — Is user-facing copy hedged, is the "Decision-support tool.
+  Not a replacement for certified range safety." disclaimer present wherever a verdict renders,
+  and is no certification claim made? (2.IV)
+- [ ] **S5 Vision proposes** — Does the agent only orchestrate CV tools, with every number
+  traceable to a tool result? (2.V)
+- [ ] **A1 Two deployables, one contract** — Are the only two deployables `apps/web` and
+  `apps/api`, with `packages/contract` generated from OpenAPI and no hand-written frontend
+  types? (3.I)
+- [ ] **A2 CV in Python only** — Is all CV in `apps/api`, with the browser limited to
+  capture, upload, and render? (3.II)
+- [ ] **A3 Pure tools, streaming, persistence** — Are agent tools pure
+  `(input) -> Finding` functions, is progress streamed over SSE, and is state in SQLite via
+  SQLAlchemy? (3.III–3.V)
+- [ ] **F1 Frontend discipline** — `strict: true`, no `any`, shadcn/ui primitives, React Bits
+  off the decision path, Tailwind + shadcn theme, TanStack Query, React Hook Form + Zod, WCAG
+  AA, non-colour-only signals, `prefers-reduced-motion`, Server Components by default. (4.I–4.VII)
+- [ ] **Q1 Quality bar** — Are ESLint + Prettier (web) and Ruff + mypy (api) configured, are
+  Vitest/RTL, Playwright, and Pytest fixture tests planned, does every CV module get a passing
+  and a failing fixture, is `.env.example` maintained, and is `OPENAI_API_KEY` server-side only?
+  (5.I–5.IV)
+- [ ] **S6 Scope** — Is the plan limited to the 3 modes and 3 demo scenarios, with thermal,
+  drone, telemetry, and digital twin explicitly deferred? (6.I–6.III)
 
 ## Project Structure
 
@@ -49,50 +96,43 @@ specs/[###-feature]/
 
 ### Source Code (repository root)
 <!--
-  ACTION REQUIRED: Replace the placeholder tree below with the concrete layout
-  for this feature. Delete unused options and expand the chosen structure with
-  real paths (e.g., apps/admin, packages/something). The delivered plan must
-  not include Option labels.
+  ACTION REQUIRED: The layout below is MANDATED by Constitution 3.I (Two Deployables, One
+  Contract) and MUST NOT be replaced with a single-project, generic frontend/backend, or mobile
+  layout. Expand the tree with the real paths for this feature, but keep the three top-level
+  directories. The delivered plan must not include Option labels.
 -->
 
 ```text
-# [REMOVE IF UNUSED] Option 1: Single project (DEFAULT)
-src/
-├── models/
-├── services/
-├── cli/
-└── lib/
-
-tests/
-├── contract/
-├── integration/
-└── unit/
-
-# [REMOVE IF UNUSED] Option 2: Web application (when "frontend" + "backend" detected)
-backend/
-├── src/
-│   ├── models/
-│   ├── services/
-│   └── api/
-└── tests/
-
-frontend/
-├── src/
+apps/
+├── web/                      # Next.js (App Router) + TypeScript strict
+│   ├── app/                  # App Router routes and layouts
 │   ├── components/
-│   ├── pages/
-│   └── services/
-└── tests/
+│   │   ├── ui/               # shadcn/ui primitives (CLI-managed)
+│   │   └── react-bits/       # React Bits (shadcn registry) — atmosphere only
+│   ├── lib/                  # TanStack Query, RHF + Zod wiring
+│   ├── stores/               # Zustand — live-monitor store only
+│   └── tests/                # Vitest + React Testing Library
+├── api/                      # Python 3.11 + FastAPI
+│   ├── app/                  # FastAPI app, routers, SSE endpoints
+│   ├── agent/                # Orchestrator + pure (input) -> Finding tools
+│   ├── cv/                   # OpenCV + YOLOv8 modules (pure functions)
+│   ├── rule_engine/          # Deterministic GO / HOLD / NO-GO
+│   ├── db/                   # SQLAlchemy models (SQLite)
+│   └── tests/
+│       ├── fixtures/images/  # Passing + failing images per CV module
+│       ├── unit/             # Pytest for tools and rule engine
+│       └── contract/         # OpenAPI conformance
+└── contract/                 # packages/contract — generated TS types + Zod schemas
+    ├── openapi.json          # Source of truth: generated from apps/api
+    ├── src/                  # types.ts, schemas/*.ts — generated, never hand-edited
+    └── scripts/              # Generation command
 
-# [REMOVE IF UNUSED] Option 3: Mobile + API (when "iOS/Android" detected)
-api/
-└── [same as backend above]
-
-ios/ or android/
-└── [platform-specific structure: feature modules, UI flows, platform tests]
+e2e/                          # Playwright — one spec per demo scenario (GO, HOLD, NO-GO)
 ```
 
-**Structure Decision**: [Document the selected structure and reference the real
-directories captured above]
+**Structure Decision**: Record which feature areas land in each deployable and confirm the
+contract is generated from `apps/api` rather than authored. If this plan adds a directory
+outside the three above, justify it in Complexity Tracking.
 
 ## Complexity Tracking
 

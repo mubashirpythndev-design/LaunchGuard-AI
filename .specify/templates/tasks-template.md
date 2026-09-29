@@ -7,8 +7,16 @@ description: "Task list template for feature implementation"
 
 **Input**: Design documents from `/specs/[###-feature-name]/`
 **Prerequisites**: plan.md (required), spec.md (required for user stories), research.md, data-model.md, contracts/
+**Constitution**: `.specify/memory/constitution.md` (v1.0.0) — every task MUST comply. If a task
+cannot comply, resolve the conflict in `spec.md` or `plan.md` first; do not weaken the task.
 
-**Tests**: The examples below include test tasks. Tests are OPTIONAL - only include them if explicitly requested in the feature specification.
+**Tests**: **REQUIRED, not optional** (Constitution 5.II — Test Obligations). Every task list
+MUST include test tasks. Minimum obligations:
+
+- Every CV module gets a fixture test with at least one **passing** and one **failing** image.
+- Every e2e demo scenario (GO, HOLD, NO-GO) gets a Playwright spec.
+- Web code touched by a story gets Vitest + React Testing Library coverage.
+- API code touched by a story gets Pytest coverage.
 
 **Organization**: Tasks are grouped by user story to enable independent implementation and testing of each story.
 
@@ -20,10 +28,20 @@ description: "Task list template for feature implementation"
 
 ## Path Conventions
 
-- **Single project**: `src/`, `tests/` at repository root
-- **Web app**: `backend/src/`, `frontend/src/`
-- **Mobile**: `api/src/`, `ios/src/` or `android/src/`
-- Paths shown below assume single project - adjust based on plan.md structure
+Constitution 3.I (Two Deployables, One Contract) fixes the layout. These paths are mandatory;
+do not invent a single-project, generic `frontend/` + `backend/`, or mobile structure.
+
+- **Web**: `apps/web/app/`, `apps/web/components/ui/`, `apps/web/components/react-bits/`,
+  `apps/web/lib/`, `apps/web/stores/`, `apps/web/tests/`
+- **API**: `apps/api/app/`, `apps/api/agent/`, `apps/api/cv/`, `apps/api/rule_engine/`,
+  `apps/api/db/`, `apps/api/tests/{unit,contract,fixtures/images}/`
+- **Contract**: `packages/contract/openapi.json`, `packages/contract/src/` — **generated only**;
+  never hand-write or hand-edit these files
+- **E2E**: `e2e/` — one Playwright spec per demo scenario
+- **Docs**: `specs/[###-feature-name]/`
+
+Paths shown below are illustrative only — rewrite every sample task with the real path for this
+feature.
 
 <!-- 
   ============================================================================
@@ -62,12 +80,13 @@ description: "Task list template for feature implementation"
 
 Examples of foundational tasks (adjust based on your project):
 
-- [ ] T004 Setup database schema and migrations framework
-- [ ] T005 [P] Implement authentication/authorization framework
-- [ ] T006 [P] Setup API routing and middleware structure
-- [ ] T007 Create base models/entities that all stories depend on
-- [ ] T008 Configure error handling and logging infrastructure
-- [ ] T009 Setup environment configuration management
+- [ ] T004 Setup SQLite + SQLAlchemy schema and migrations framework
+- [ ] T005 [P] Generate `packages/contract` (OpenAPI → TS types + Zod schemas) from `apps/api`
+- [ ] T006 [P] Configure linting: ESLint + Prettier (web), Ruff + mypy (api)
+- [ ] T007 [P] Configure CI to run lint, typecheck, and tests
+- [ ] T008 Create base models/entities that all stories depend on (Run, Finding, Decision)
+- [ ] T009 Implement the deterministic rule engine skeleton (GO / HOLD / NO-GO) with no LLM path
+- [ ] T010 Setup environment configuration management and `.env.example`
 
 **Checkpoint**: Foundation ready - user story implementation can now begin in parallel
 
@@ -79,21 +98,24 @@ Examples of foundational tasks (adjust based on your project):
 
 **Independent Test**: [How to verify this story works on its own]
 
-### Tests for User Story 1 (OPTIONAL - only if tests requested) ⚠️
+### Tests for User Story 1 (REQUIRED by Constitution 5.II) ⚠️
 
 > **NOTE: Write these tests FIRST, ensure they FAIL before implementation**
 
-- [ ] T010 [P] [US1] Contract test for [endpoint] in tests/contract/test_[name].py
-- [ ] T011 [P] [US1] Integration test for [user journey] in tests/integration/test_[name].py
+- [ ] T011 [P] [US1] Pytest contract test for [endpoint] in `apps/api/tests/contract/test_[name].py`
+- [ ] T012 [P] [US1] Pytest unit test for [agent tool] incl. passing + failing fixture images in `apps/api/tests/fixtures/images/`
+- [ ] T013 [P] [US1] Vitest + RTL test for [component] in `apps/web/tests/test_[name].test.tsx`
+- [ ] T014 [P] [US1] Playwright e2e for this story's demo scenario in `e2e/[scenario].spec.ts`
 
 ### Implementation for User Story 1
 
-- [ ] T012 [P] [US1] Create [Entity1] model in src/models/[entity1].py
-- [ ] T013 [P] [US1] Create [Entity2] model in src/models/[entity2].py
-- [ ] T014 [US1] Implement [Service] in src/services/[service].py (depends on T012, T013)
-- [ ] T015 [US1] Implement [endpoint/feature] in src/[location]/[file].py
-- [ ] T016 [US1] Add validation and error handling
-- [ ] T017 [US1] Add logging for user story 1 operations
+- [ ] T015 [P] [US1] Create [Entity1] model in `apps/api/db/models/[entity1].py`
+- [ ] T016 [P] [US1] Create [Entity2] model in `apps/api/db/models/[entity2].py`
+- [ ] T017 [US1] Implement [CV tool] as a pure `(input) -> Finding` function in `apps/api/cv/[name].py` (depends on T015, T016)
+- [ ] T018 [US1] Implement [endpoint/feature] in `apps/api/app/[name].py`
+- [ ] T019 [US1] Regenerate `packages/contract` from the updated OpenAPI document
+- [ ] T020 [US1] Add validation and error handling — every failure path yields `severity: "warning"`
+- [ ] T021 [US1] Add logging for user story 1 operations
 
 **Checkpoint**: At this point, User Story 1 should be fully functional and testable independently
 
@@ -105,17 +127,20 @@ Examples of foundational tasks (adjust based on your project):
 
 **Independent Test**: [How to verify this story works on its own]
 
-### Tests for User Story 2 (OPTIONAL - only if tests requested) ⚠️
+### Tests for User Story 2 (REQUIRED by Constitution 5.II) ⚠️
 
-- [ ] T018 [P] [US2] Contract test for [endpoint] in tests/contract/test_[name].py
-- [ ] T019 [P] [US2] Integration test for [user journey] in tests/integration/test_[name].py
+- [ ] T022 [P] [US2] Pytest contract test for [endpoint] in `apps/api/tests/contract/test_[name].py`
+- [ ] T023 [P] [US2] Pytest unit test for [agent tool] incl. passing + failing fixture images in `apps/api/tests/fixtures/images/`
+- [ ] T024 [P] [US2] Vitest + RTL test for [component] in `apps/web/tests/test_[name].test.tsx`
+- [ ] T025 [P] [US2] Playwright e2e for this story's demo scenario in `e2e/[scenario].spec.ts`
 
 ### Implementation for User Story 2
 
-- [ ] T020 [P] [US2] Create [Entity] model in src/models/[entity].py
-- [ ] T021 [US2] Implement [Service] in src/services/[service].py
-- [ ] T022 [US2] Implement [endpoint/feature] in src/[location]/[file].py
-- [ ] T023 [US2] Integrate with User Story 1 components (if needed)
+- [ ] T026 [P] [US2] Create [Entity] model in `apps/api/db/models/[entity].py`
+- [ ] T027 [US2] Implement [Service] in `apps/api/agent/[service].py`
+- [ ] T028 [US2] Implement [endpoint/feature] in `apps/api/app/[name].py`
+- [ ] T029 [US2] Regenerate `packages/contract` from the updated OpenAPI document
+- [ ] T030 [US2] Integrate with User Story 1 components (if needed)
 
 **Checkpoint**: At this point, User Stories 1 AND 2 should both work independently
 
@@ -127,16 +152,19 @@ Examples of foundational tasks (adjust based on your project):
 
 **Independent Test**: [How to verify this story works on its own]
 
-### Tests for User Story 3 (OPTIONAL - only if tests requested) ⚠️
+### Tests for User Story 3 (REQUIRED by Constitution 5.II) ⚠️
 
-- [ ] T024 [P] [US3] Contract test for [endpoint] in tests/contract/test_[name].py
-- [ ] T025 [P] [US3] Integration test for [user journey] in tests/integration/test_[name].py
+- [ ] T031 [P] [US3] Pytest contract test for [endpoint] in `apps/api/tests/contract/test_[name].py`
+- [ ] T032 [P] [US3] Pytest unit test for [agent tool] incl. passing + failing fixture images in `apps/api/tests/fixtures/images/`
+- [ ] T033 [P] [US3] Vitest + RTL test for [component] in `apps/web/tests/test_[name].test.tsx`
+- [ ] T034 [P] [US3] Playwright e2e for this story's demo scenario in `e2e/[scenario].spec.ts`
 
 ### Implementation for User Story 3
 
-- [ ] T026 [P] [US3] Create [Entity] model in src/models/[entity].py
-- [ ] T027 [US3] Implement [Service] in src/services/[service].py
-- [ ] T028 [US3] Implement [endpoint/feature] in src/[location]/[file].py
+- [ ] T035 [P] [US3] Create [Entity] model in `apps/api/db/models/[entity].py`
+- [ ] T036 [US3] Implement [Service] in `apps/api/agent/[service].py`
+- [ ] T037 [US3] Implement [endpoint/feature] in `apps/api/app/[name].py`
+- [ ] T038 [US3] Regenerate `packages/contract` from the updated OpenAPI document
 
 **Checkpoint**: All user stories should now be independently functional
 
@@ -150,11 +178,14 @@ Examples of foundational tasks (adjust based on your project):
 
 **Purpose**: Improvements that affect multiple user stories
 
-- [ ] TXXX [P] Documentation updates in docs/
+- [ ] TXXX [P] Documentation updates in `docs/`
 - [ ] TXXX Code cleanup and refactoring
 - [ ] TXXX Performance optimization across all stories
-- [ ] TXXX [P] Additional unit tests (if requested) in tests/unit/
-- [ ] TXXX Security hardening
+- [ ] TXXX [P] Fill coverage gaps in `apps/api/tests/unit/` and `apps/web/tests/`
+- [ ] TXXX Security hardening — confirm `OPENAI_API_KEY` never reaches the browser bundle
+- [ ] TXXX Accessibility pass: WCAG AA contrast, text + icon + colour on every verdict, `prefers-reduced-motion` honoured
+- [ ] TXXX [P] Verify the "Decision-support tool. Not a replacement for certified range safety." disclaimer renders wherever a verdict appears
+- [ ] TXXX [P] Confirm the persistent disclaimer and hedging wording; remove any certification claim
 - [ ] TXXX Run quickstart.md validation
 
 ---
@@ -178,9 +209,10 @@ Examples of foundational tasks (adjust based on your project):
 
 ### Within Each User Story
 
-- Tests (if included) MUST be written and FAIL before implementation
+- Tests MUST be written and MUST FAIL before implementation
 - Models before services
 - Services before endpoints
+- Regenerate `packages/contract` after any API change, BEFORE the web task that consumes it
 - Core implementation before integration
 - Story complete before moving to next priority
 
@@ -198,13 +230,15 @@ Examples of foundational tasks (adjust based on your project):
 ## Parallel Example: User Story 1
 
 ```bash
-# Launch all tests for User Story 1 together (if tests requested):
-Task: "Contract test for [endpoint] in tests/contract/test_[name].py"
-Task: "Integration test for [user journey] in tests/integration/test_[name].py"
+# Launch all tests for User Story 1 together:
+Task: "Pytest contract test for [endpoint] in apps/api/tests/contract/test_[name].py"
+Task: "Pytest unit test for [agent tool] incl. passing + failing fixture images in apps/api/tests/fixtures/images/"
+Task: "Vitest + RTL test for [component] in apps/web/tests/test_[name].test.tsx"
+Task: "Playwright e2e for this story's demo scenario in e2e/[scenario].spec.ts"
 
 # Launch all models for User Story 1 together:
-Task: "Create [Entity1] model in src/models/[entity1].py"
-Task: "Create [Entity2] model in src/models/[entity2].py"
+Task: "Create [Entity1] model in apps/api/db/models/[entity1].py"
+Task: "Create [Entity2] model in apps/api/db/models/[entity2].py"
 ```
 
 ---
@@ -246,6 +280,12 @@ With multiple developers:
 - [Story] label maps task to specific user story for traceability
 - Each user story should be independently completable and testable
 - Verify tests fail before implementing
-- Commit after each task or logical group
+- Commit after each task or logical group, Conventional Commits format
 - Stop at any checkpoint to validate story independently
 - Avoid: vague tasks, same file conflicts, cross-story dependencies that break independence
+- A task is only done when every condition in Constitution section 7 (Definition of Done) holds:
+  compiles with no type errors, lint passes, its tests pass, it is visible in the UI if
+  user-facing, and it matches the `spec.md` acceptance criteria
+- If a task would violate a MUST in the constitution, stop and resolve it — record the
+  deviation in `plan.md` Complexity Tracking, or amend the constitution explicitly via
+  `/sp.constitution`
