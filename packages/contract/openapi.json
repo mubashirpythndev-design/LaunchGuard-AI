@@ -2,8 +2,9 @@
   "openapi": "3.1.0",
   "info": {
     "title": "LaunchGuard AI API",
-    "description": "Deterministic safety inspection and pad monitoring API",
-    "version": "0.1.0"
+    "description": "Deterministic safety inspection and pad monitoring API. Governed by specs/001-launchguard-mvp/contracts/api.md.",
+    "version": "0.1.0",
+    "x-attributions": "Verdict computed by rules; explanation by AI. Decision-support tool. Not a replacement for certified range safety."
   },
   "paths": {
     "/api/health": {
@@ -26,10 +27,1274 @@
           }
         }
       }
+    },
+    "/api/config": {
+      "get": {
+        "tags": [
+          "config"
+        ],
+        "summary": "Get Config",
+        "description": "Return public configuration including thresholds, confidence floor, and disclaimer.",
+        "operationId": "get_config_api_config_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConfigResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/inspections": {
+      "post": {
+        "tags": [
+          "inspections"
+        ],
+        "summary": "Create Inspection",
+        "description": "Initiate a pre-launch inspection run from an uploaded rocket image.",
+        "operationId": "create_inspection_api_inspections_post",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_create_inspection_api_inspections_post"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreateRunResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/monitor": {
+      "post": {
+        "tags": [
+          "monitor"
+        ],
+        "summary": "Create Monitor Run",
+        "description": "Create a new launchpad monitor run.",
+        "operationId": "create_monitor_run_api_monitor_post",
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreateRunResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/monitor/{run_id}/frame": {
+      "post": {
+        "tags": [
+          "monitor"
+        ],
+        "summary": "Analyze Frame",
+        "description": "Process a single video or camera frame against pad danger zone and hazard cues.",
+        "operationId": "analyze_frame_api_monitor__run_id__frame_post",
+        "parameters": [
+          {
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Run Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FrameAnalysisResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/monitor/{run_id}/zone": {
+      "put": {
+        "tags": [
+          "monitor"
+        ],
+        "summary": "Upsert Zone",
+        "description": "Create or update danger zone polygon for a monitor run.",
+        "operationId": "upsert_zone_api_monitor__run_id__zone_put",
+        "parameters": [
+          {
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Run Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ZonePolygonPayload"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DangerZoneResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "monitor"
+        ],
+        "summary": "Delete Zone",
+        "description": "Remove danger zone definition for a monitor run.",
+        "operationId": "delete_zone_api_monitor__run_id__zone_delete",
+        "parameters": [
+          {
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Run Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeleteZoneResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/monitor/{run_id}/log": {
+      "get": {
+        "tags": [
+          "monitor"
+        ],
+        "summary": "Get Monitor Log",
+        "description": "Retrieve chronological log of monitor detections.",
+        "operationId": "get_monitor_log_api_monitor__run_id__log_get",
+        "parameters": [
+          {
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Run Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MonitorLogResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/runs": {
+      "get": {
+        "tags": [
+          "runs"
+        ],
+        "summary": "Get Runs List",
+        "description": "List historical inspection and monitor runs.",
+        "operationId": "get_runs_list_api_runs_get",
+        "parameters": [
+          {
+            "name": "verdict",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/Verdict"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Verdict"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 50,
+              "title": "Limit"
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0,
+              "title": "Offset"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RunListResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/runs/latest": {
+      "get": {
+        "tags": [
+          "runs"
+        ],
+        "summary": "Get Latest Run Summary",
+        "description": "Retrieve summary of the latest run for dashboard presentation.",
+        "operationId": "get_latest_run_summary_api_runs_latest_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LatestRunSummaryResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/runs/{run_id}": {
+      "get": {
+        "tags": [
+          "runs"
+        ],
+        "summary": "Get Run Detail",
+        "description": "Retrieve details and status for a specific run.",
+        "operationId": "get_run_detail_api_runs__run_id__get",
+        "parameters": [
+          {
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Run Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RunDetailResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/runs/{run_id}/required-inputs": {
+      "get": {
+        "tags": [
+          "runs"
+        ],
+        "summary": "Get Required Inputs",
+        "description": "Retrieve list of mandatory inputs required by the run's checklist.",
+        "operationId": "get_required_inputs_api_runs__run_id__required_inputs_get",
+        "parameters": [
+          {
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Run Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequiredInputsResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/runs/{run_id}/manual-inputs": {
+      "post": {
+        "tags": [
+          "runs"
+        ],
+        "summary": "Submit Manual Inputs",
+        "description": "Submit manual environmental and pad clearance inputs to resume inspection.",
+        "operationId": "submit_manual_inputs_api_runs__run_id__manual_inputs_post",
+        "parameters": [
+          {
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Run Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ManualInputPayload"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ManualInputsSubmissionResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/runs/{run_id}/events": {
+      "get": {
+        "tags": [
+          "runs"
+        ],
+        "summary": "Get Events",
+        "description": "Retrieve JSON event log for a run strictly greater than 'after' sequence.",
+        "operationId": "get_events_api_runs__run_id__events_get",
+        "parameters": [
+          {
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Run Id"
+            }
+          },
+          {
+            "name": "after",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0,
+              "title": "After"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/EventMessageResponse"
+                  },
+                  "title": "Response Get Events Api Runs  Run Id  Events Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/runs/{run_id}/stream": {
+      "get": {
+        "tags": [
+          "runs"
+        ],
+        "summary": "Stream Events",
+        "description": "Stream real-time Server-Sent Events with reconnection support.",
+        "operationId": "stream_events_api_runs__run_id__stream_get",
+        "parameters": [
+          {
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Run Id"
+            }
+          },
+          {
+            "name": "Last-Event-ID",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Last-Event-Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/runs/{run_id}/report": {
+      "get": {
+        "tags": [
+          "runs"
+        ],
+        "summary": "Get Report",
+        "description": "Retrieve final generated report for a completed run.",
+        "operationId": "get_report_api_runs__run_id__report_get",
+        "parameters": [
+          {
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Run Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReportResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/runs/{run_id}/share": {
+      "post": {
+        "tags": [
+          "runs"
+        ],
+        "summary": "Create Share Link",
+        "description": "Generate or retrieve public view token for a completed run report.",
+        "operationId": "create_share_link_api_runs__run_id__share_post",
+        "parameters": [
+          {
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Run Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ShareTokenResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/runs/{run_id}/image": {
+      "get": {
+        "tags": [
+          "runs"
+        ],
+        "summary": "Get Run Image",
+        "description": "Return local image bytes for inspection or preview.",
+        "operationId": "get_run_image_api_runs__run_id__image_get",
+        "parameters": [
+          {
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Run Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/runs/{run_id}/annotated.png": {
+      "get": {
+        "tags": [
+          "runs"
+        ],
+        "summary": "Get Annotated Image",
+        "description": "Return server-rendered annotated composite image.",
+        "operationId": "get_annotated_image_api_runs__run_id__annotated_png_get",
+        "parameters": [
+          {
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Run Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/share/{token}": {
+      "get": {
+        "tags": [
+          "share"
+        ],
+        "summary": "Get Public Report",
+        "description": "Retrieve public read-only report by capability share token.",
+        "operationId": "get_public_report_api_share__token__get",
+        "parameters": [
+          {
+            "name": "token",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Token"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicReportResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/demo/scenarios": {
+      "get": {
+        "tags": [
+          "demo"
+        ],
+        "summary": "Get Demo Scenarios",
+        "description": "List all available pre-configured demo scenarios.",
+        "operationId": "get_demo_scenarios_api_demo_scenarios_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DemoScenariosResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/demo/scenarios/{key}/run": {
+      "post": {
+        "tags": [
+          "demo"
+        ],
+        "summary": "Trigger Demo Scenario",
+        "description": "Launch a pipeline run using bundled scenario data.",
+        "operationId": "trigger_demo_scenario_api_demo_scenarios__key__run_post",
+        "parameters": [
+          {
+            "name": "key",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Key"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreateRunResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
     "schemas": {
+      "ActionSchema": {
+        "properties": {
+          "check_id": {
+            "type": "string",
+            "title": "Check Id"
+          },
+          "action": {
+            "type": "string",
+            "title": "Action"
+          }
+        },
+        "type": "object",
+        "required": [
+          "check_id",
+          "action"
+        ],
+        "title": "ActionSchema"
+      },
+      "Body_create_inspection_api_inspections_post": {
+        "properties": {
+          "file": {
+            "type": "string",
+            "contentMediaType": "application/octet-stream",
+            "title": "File"
+          }
+        },
+        "type": "object",
+        "required": [
+          "file"
+        ],
+        "title": "Body_create_inspection_api_inspections_post"
+      },
+      "ChecklistStepSchema": {
+        "properties": {
+          "position": {
+            "type": "integer",
+            "title": "Position"
+          },
+          "step_key": {
+            "type": "string",
+            "title": "Step Key"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "finding_count": {
+            "type": "integer",
+            "title": "Finding Count",
+            "default": 0
+          }
+        },
+        "type": "object",
+        "required": [
+          "position",
+          "step_key",
+          "label",
+          "status"
+        ],
+        "title": "ChecklistStepSchema"
+      },
+      "ConfigResponse": {
+        "properties": {
+          "min_confidence_for_ok": {
+            "type": "number",
+            "title": "Min Confidence For Ok",
+            "default": 0.35
+          },
+          "thresholds": {
+            "$ref": "#/components/schemas/ThresholdsConfig"
+          },
+          "disclaimer": {
+            "type": "string",
+            "title": "Disclaimer",
+            "default": "Decision-support tool. Not a replacement for certified range safety."
+          }
+        },
+        "type": "object",
+        "title": "ConfigResponse",
+        "description": "Schema returned by GET /api/config."
+      },
+      "CreateRunResponse": {
+        "properties": {
+          "run_id": {
+            "type": "string",
+            "title": "Run Id"
+          },
+          "mode": {
+            "type": "string",
+            "title": "Mode"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "stream_url": {
+            "type": "string",
+            "title": "Stream Url"
+          },
+          "expected_steps": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Expected Steps"
+          }
+        },
+        "type": "object",
+        "required": [
+          "run_id",
+          "mode",
+          "status",
+          "stream_url",
+          "expected_steps"
+        ],
+        "title": "CreateRunResponse"
+      },
+      "DangerZoneResponse": {
+        "properties": {
+          "run_id": {
+            "type": "string",
+            "title": "Run Id"
+          },
+          "points": {
+            "items": {
+              "items": {
+                "type": "number"
+              },
+              "type": "array"
+            },
+            "type": "array",
+            "title": "Points"
+          },
+          "source_width": {
+            "type": "integer",
+            "title": "Source Width"
+          },
+          "source_height": {
+            "type": "integer",
+            "title": "Source Height"
+          },
+          "label": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Label"
+          }
+        },
+        "type": "object",
+        "required": [
+          "run_id",
+          "points",
+          "source_width",
+          "source_height"
+        ],
+        "title": "DangerZoneResponse"
+      },
+      "DeleteZoneResponse": {
+        "properties": {
+          "deleted": {
+            "type": "boolean",
+            "title": "Deleted",
+            "default": true
+          }
+        },
+        "type": "object",
+        "title": "DeleteZoneResponse"
+      },
+      "DemoScenarioItem": {
+        "properties": {
+          "key": {
+            "type": "string",
+            "title": "Key"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "expected_verdict": {
+            "$ref": "#/components/schemas/Verdict"
+          }
+        },
+        "type": "object",
+        "required": [
+          "key",
+          "label",
+          "expected_verdict"
+        ],
+        "title": "DemoScenarioItem"
+      },
+      "DemoScenariosResponse": {
+        "properties": {
+          "scenarios": {
+            "items": {
+              "$ref": "#/components/schemas/DemoScenarioItem"
+            },
+            "type": "array",
+            "title": "Scenarios"
+          }
+        },
+        "type": "object",
+        "required": [
+          "scenarios"
+        ],
+        "title": "DemoScenariosResponse"
+      },
+      "EventMessageResponse": {
+        "properties": {
+          "seq": {
+            "type": "integer",
+            "title": "Seq"
+          },
+          "event_type": {
+            "type": "string",
+            "title": "Event Type"
+          },
+          "payload": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Payload"
+          },
+          "at": {
+            "type": "string",
+            "title": "At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "seq",
+          "event_type",
+          "payload",
+          "at"
+        ],
+        "title": "EventMessageResponse"
+      },
+      "FindingSchema": {
+        "properties": {
+          "module": {
+            "type": "string",
+            "title": "Module"
+          },
+          "check_id": {
+            "type": "string",
+            "title": "Check Id"
+          },
+          "severity": {
+            "$ref": "#/components/schemas/Severity"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          },
+          "confidence": {
+            "type": "number",
+            "title": "Confidence"
+          },
+          "metrics": {
+            "items": {
+              "$ref": "#/components/schemas/MeasurementSchema"
+            },
+            "type": "array",
+            "title": "Metrics"
+          },
+          "overlay": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/OverlaySchema"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "step_position": {
+            "type": "integer",
+            "title": "Step Position",
+            "default": 0
+          },
+          "degraded": {
+            "type": "boolean",
+            "title": "Degraded",
+            "default": false
+          },
+          "low_confidence_critical": {
+            "type": "boolean",
+            "title": "Low Confidence Critical",
+            "default": false
+          },
+          "near_threshold_note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Near Threshold Note"
+          }
+        },
+        "type": "object",
+        "required": [
+          "module",
+          "check_id",
+          "severity",
+          "message",
+          "confidence"
+        ],
+        "title": "FindingSchema"
+      },
+      "FrameAnalysisResponse": {
+        "properties": {
+          "seq": {
+            "type": "integer",
+            "title": "Seq"
+          },
+          "zone_status": {
+            "type": "string",
+            "title": "Zone Status"
+          },
+          "processing_ms": {
+            "type": "number",
+            "title": "Processing Ms"
+          },
+          "frame_width": {
+            "type": "integer",
+            "title": "Frame Width"
+          },
+          "frame_height": {
+            "type": "integer",
+            "title": "Frame Height"
+          },
+          "findings": {
+            "items": {
+              "$ref": "#/components/schemas/FindingSchema"
+            },
+            "type": "array",
+            "title": "Findings"
+          }
+        },
+        "type": "object",
+        "required": [
+          "seq",
+          "zone_status",
+          "processing_ms",
+          "frame_width",
+          "frame_height",
+          "findings"
+        ],
+        "title": "FrameAnalysisResponse"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
       "HealthResponse": {
         "properties": {
           "status": {
@@ -55,6 +1320,1041 @@
         },
         "type": "object",
         "title": "HealthResponse"
+      },
+      "InputFieldSchema": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "type": {
+            "type": "string",
+            "title": "Type"
+          },
+          "unit": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unit"
+          },
+          "min": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Min"
+          },
+          "max": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max"
+          },
+          "options": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Options"
+          },
+          "max_length": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max Length"
+          },
+          "required": {
+            "type": "boolean",
+            "title": "Required",
+            "default": true
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "label",
+          "type"
+        ],
+        "title": "InputFieldSchema"
+      },
+      "LatestRunSummaryResponse": {
+        "properties": {
+          "verdict": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Verdict"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "risk_score": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Risk Score"
+          },
+          "checklist": {
+            "items": {
+              "$ref": "#/components/schemas/ChecklistStepSchema"
+            },
+            "type": "array",
+            "title": "Checklist"
+          },
+          "latest_runs": {
+            "items": {
+              "$ref": "#/components/schemas/RunListItem"
+            },
+            "type": "array",
+            "title": "Latest Runs"
+          }
+        },
+        "type": "object",
+        "title": "LatestRunSummaryResponse"
+      },
+      "ManualInputPayload": {
+        "properties": {
+          "wind_speed_ms": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Wind Speed Ms"
+          },
+          "visibility": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Visibility"
+          },
+          "precipitation": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Precipitation"
+          },
+          "area_cleared": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Area Cleared"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes"
+          }
+        },
+        "type": "object",
+        "title": "ManualInputPayload"
+      },
+      "ManualInputsSubmissionResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "missing": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Missing"
+          },
+          "fields": {
+            "items": {
+              "$ref": "#/components/schemas/InputFieldSchema"
+            },
+            "type": "array",
+            "title": "Fields"
+          }
+        },
+        "type": "object",
+        "required": [
+          "status",
+          "missing",
+          "fields"
+        ],
+        "title": "ManualInputsSubmissionResponse"
+      },
+      "MeasurementSchema": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "value": {
+            "type": "number",
+            "title": "Value"
+          },
+          "unit": {
+            "type": "string",
+            "title": "Unit"
+          },
+          "error_margin": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error Margin"
+          },
+          "threshold": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Threshold"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "value",
+          "unit"
+        ],
+        "title": "MeasurementSchema"
+      },
+      "MonitorLogEntry": {
+        "properties": {
+          "at": {
+            "type": "string",
+            "title": "At"
+          },
+          "zone_status": {
+            "type": "string",
+            "title": "Zone Status"
+          },
+          "check_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Check Ids"
+          },
+          "max_severity": {
+            "type": "string",
+            "title": "Max Severity"
+          }
+        },
+        "type": "object",
+        "required": [
+          "at",
+          "zone_status",
+          "check_ids",
+          "max_severity"
+        ],
+        "title": "MonitorLogEntry"
+      },
+      "MonitorLogResponse": {
+        "properties": {
+          "entries": {
+            "items": {
+              "$ref": "#/components/schemas/MonitorLogEntry"
+            },
+            "type": "array",
+            "title": "Entries"
+          }
+        },
+        "type": "object",
+        "required": [
+          "entries"
+        ],
+        "title": "MonitorLogResponse"
+      },
+      "NarrativeSchema": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "text": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Text"
+          },
+          "model": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Model"
+          }
+        },
+        "type": "object",
+        "required": [
+          "status"
+        ],
+        "title": "NarrativeSchema"
+      },
+      "OverlaySchema": {
+        "properties": {
+          "kind": {
+            "type": "string",
+            "title": "Kind"
+          },
+          "check_id": {
+            "type": "string",
+            "title": "Check Id"
+          },
+          "points": {
+            "items": {
+              "items": {
+                "type": "number"
+              },
+              "type": "array"
+            },
+            "type": "array",
+            "title": "Points"
+          },
+          "radius": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Radius"
+          },
+          "start_deg": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Start Deg"
+          },
+          "end_deg": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "End Deg"
+          },
+          "label": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Label"
+          }
+        },
+        "type": "object",
+        "required": [
+          "kind",
+          "check_id"
+        ],
+        "title": "OverlaySchema"
+      },
+      "PublicReportResponse": {
+        "properties": {
+          "report_id": {
+            "type": "string",
+            "title": "Report Id"
+          },
+          "run_id": {
+            "type": "string",
+            "title": "Run Id"
+          },
+          "verdict": {
+            "$ref": "#/components/schemas/Verdict"
+          },
+          "risk_score": {
+            "type": "integer",
+            "title": "Risk Score"
+          },
+          "disclaimer": {
+            "type": "string",
+            "title": "Disclaimer"
+          },
+          "checklist": {
+            "items": {
+              "$ref": "#/components/schemas/ChecklistStepSchema"
+            },
+            "type": "array",
+            "title": "Checklist"
+          },
+          "reasons": {
+            "items": {
+              "$ref": "#/components/schemas/ReasonSchema"
+            },
+            "type": "array",
+            "title": "Reasons"
+          },
+          "recommended_actions": {
+            "items": {
+              "$ref": "#/components/schemas/ActionSchema"
+            },
+            "type": "array",
+            "title": "Recommended Actions"
+          },
+          "narrative": {
+            "$ref": "#/components/schemas/NarrativeSchema"
+          },
+          "annotated_image_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Annotated Image Url"
+          },
+          "generated_at": {
+            "type": "string",
+            "title": "Generated At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "report_id",
+          "run_id",
+          "verdict",
+          "risk_score",
+          "disclaimer",
+          "checklist",
+          "reasons",
+          "recommended_actions",
+          "narrative",
+          "generated_at"
+        ],
+        "title": "PublicReportResponse"
+      },
+      "ReasonSchema": {
+        "properties": {
+          "check_id": {
+            "type": "string",
+            "title": "Check Id"
+          },
+          "severity": {
+            "$ref": "#/components/schemas/Severity"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          },
+          "confidence": {
+            "type": "number",
+            "title": "Confidence"
+          },
+          "ambiguous": {
+            "type": "boolean",
+            "title": "Ambiguous",
+            "default": false
+          }
+        },
+        "type": "object",
+        "required": [
+          "check_id",
+          "severity",
+          "message",
+          "confidence"
+        ],
+        "title": "ReasonSchema"
+      },
+      "ReportResponse": {
+        "properties": {
+          "report_id": {
+            "type": "string",
+            "title": "Report Id"
+          },
+          "run_id": {
+            "type": "string",
+            "title": "Run Id"
+          },
+          "verdict": {
+            "$ref": "#/components/schemas/Verdict"
+          },
+          "risk_score": {
+            "type": "integer",
+            "title": "Risk Score"
+          },
+          "verdict_attribution": {
+            "type": "string",
+            "title": "Verdict Attribution"
+          },
+          "disclaimer": {
+            "type": "string",
+            "title": "Disclaimer"
+          },
+          "checklist": {
+            "items": {
+              "$ref": "#/components/schemas/ChecklistStepSchema"
+            },
+            "type": "array",
+            "title": "Checklist"
+          },
+          "reasons": {
+            "items": {
+              "$ref": "#/components/schemas/ReasonSchema"
+            },
+            "type": "array",
+            "title": "Reasons"
+          },
+          "recommended_actions": {
+            "items": {
+              "$ref": "#/components/schemas/ActionSchema"
+            },
+            "type": "array",
+            "title": "Recommended Actions"
+          },
+          "findings": {
+            "items": {
+              "$ref": "#/components/schemas/FindingSchema"
+            },
+            "type": "array",
+            "title": "Findings"
+          },
+          "narrative": {
+            "$ref": "#/components/schemas/NarrativeSchema"
+          },
+          "annotated_image_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Annotated Image Url"
+          },
+          "generated_at": {
+            "type": "string",
+            "title": "Generated At"
+          },
+          "share_token": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Share Token"
+          }
+        },
+        "type": "object",
+        "required": [
+          "report_id",
+          "run_id",
+          "verdict",
+          "risk_score",
+          "verdict_attribution",
+          "disclaimer",
+          "checklist",
+          "reasons",
+          "recommended_actions",
+          "findings",
+          "narrative",
+          "generated_at"
+        ],
+        "title": "ReportResponse"
+      },
+      "RequiredInputsResponse": {
+        "properties": {
+          "run_id": {
+            "type": "string",
+            "title": "Run Id"
+          },
+          "missing": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Missing"
+          },
+          "fields": {
+            "items": {
+              "$ref": "#/components/schemas/InputFieldSchema"
+            },
+            "type": "array",
+            "title": "Fields"
+          }
+        },
+        "type": "object",
+        "required": [
+          "run_id",
+          "missing",
+          "fields"
+        ],
+        "title": "RequiredInputsResponse"
+      },
+      "RunDetailResponse": {
+        "properties": {
+          "run_id": {
+            "type": "string",
+            "title": "Run Id"
+          },
+          "mode": {
+            "type": "string",
+            "title": "Mode"
+          },
+          "source_type": {
+            "type": "string",
+            "title": "Source Type"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "status_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Status Reason"
+          },
+          "verdict": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Verdict"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "risk_score": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Risk Score"
+          },
+          "created_at": {
+            "type": "string",
+            "title": "Created At"
+          },
+          "completed_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Completed At"
+          },
+          "thresholds": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Thresholds"
+          },
+          "source": {
+            "$ref": "#/components/schemas/RunDetailSource"
+          }
+        },
+        "type": "object",
+        "required": [
+          "run_id",
+          "mode",
+          "source_type",
+          "status",
+          "created_at"
+        ],
+        "title": "RunDetailResponse"
+      },
+      "RunDetailSource": {
+        "properties": {
+          "width": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Width"
+          },
+          "height": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Height"
+          },
+          "url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Url"
+          }
+        },
+        "type": "object",
+        "title": "RunDetailSource"
+      },
+      "RunListItem": {
+        "properties": {
+          "run_id": {
+            "type": "string",
+            "title": "Run Id"
+          },
+          "verdict": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Verdict"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "risk_score": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Risk Score"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "created_at": {
+            "type": "string",
+            "title": "Created At"
+          },
+          "max_severity": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Severity"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "run_id",
+          "status",
+          "created_at"
+        ],
+        "title": "RunListItem"
+      },
+      "RunListResponse": {
+        "properties": {
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/RunListItem"
+            },
+            "type": "array",
+            "title": "Items"
+          }
+        },
+        "type": "object",
+        "required": [
+          "total",
+          "items"
+        ],
+        "title": "RunListResponse"
+      },
+      "Severity": {
+        "type": "string",
+        "enum": [
+          "ok",
+          "warning",
+          "critical"
+        ],
+        "title": "Severity"
+      },
+      "ShareTokenResponse": {
+        "properties": {
+          "token": {
+            "type": "string",
+            "title": "Token"
+          },
+          "url": {
+            "type": "string",
+            "title": "Url"
+          },
+          "read_only": {
+            "type": "boolean",
+            "title": "Read Only",
+            "default": true
+          },
+          "created_at": {
+            "type": "string",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "token",
+          "url",
+          "created_at"
+        ],
+        "title": "ShareTokenResponse"
+      },
+      "ThresholdsConfig": {
+        "properties": {
+          "fin_angle_warning_deg": {
+            "type": "number",
+            "title": "Fin Angle Warning Deg",
+            "default": 3.0
+          },
+          "fin_angle_critical_deg": {
+            "type": "number",
+            "title": "Fin Angle Critical Deg",
+            "default": 6.0
+          },
+          "fin_angle_error_margin_deg": {
+            "type": "number",
+            "title": "Fin Angle Error Margin Deg",
+            "default": 1.5
+          },
+          "wind_warning_ms": {
+            "type": "number",
+            "title": "Wind Warning Ms",
+            "default": 10.0
+          },
+          "wind_critical_ms": {
+            "type": "number",
+            "title": "Wind Critical Ms",
+            "default": 15.0
+          },
+          "poor_visibility_severity": {
+            "$ref": "#/components/schemas/Severity",
+            "default": "warning"
+          },
+          "heavy_precipitation_severity": {
+            "$ref": "#/components/schemas/Severity",
+            "default": "warning"
+          },
+          "area_not_cleared_severity": {
+            "$ref": "#/components/schemas/Severity",
+            "default": "critical"
+          },
+          "object_in_zone_severity": {
+            "$ref": "#/components/schemas/Severity",
+            "default": "critical"
+          },
+          "motion_sensitivity": {
+            "type": "number",
+            "title": "Motion Sensitivity",
+            "default": 0.5
+          },
+          "detector_conf": {
+            "type": "number",
+            "title": "Detector Conf",
+            "default": 0.25
+          },
+          "detector_iou": {
+            "type": "number",
+            "title": "Detector Iou",
+            "default": 0.45
+          },
+          "zone_occupancy": {
+            "type": "boolean",
+            "title": "Zone Occupancy",
+            "default": true
+          }
+        },
+        "type": "object",
+        "title": "ThresholdsConfig",
+        "description": "Configurable thresholds matching rule_engine.types.Thresholds."
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "ctx": {
+            "type": "object",
+            "title": "Context"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      },
+      "Verdict": {
+        "type": "string",
+        "enum": [
+          "GO",
+          "HOLD",
+          "NO-GO"
+        ],
+        "title": "Verdict"
+      },
+      "ZonePolygonPayload": {
+        "properties": {
+          "points": {
+            "items": {
+              "items": {
+                "type": "number"
+              },
+              "type": "array"
+            },
+            "type": "array",
+            "title": "Points"
+          },
+          "label": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Label"
+          }
+        },
+        "type": "object",
+        "required": [
+          "points"
+        ],
+        "title": "ZonePolygonPayload"
       }
     }
   }

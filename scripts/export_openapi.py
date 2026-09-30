@@ -10,6 +10,15 @@ api_dir = repo_root / "apps" / "api"
 if str(api_dir) not in sys.path:
     sys.path.insert(0, str(api_dir))
 
+# Also add apps/api/.venv site-packages if not running inside the venv
+win_sp = api_dir / ".venv" / "Lib" / "site-packages"
+posix_sp = list((api_dir / ".venv" / "lib").glob("python*/site-packages")) if (api_dir / ".venv" / "lib").exists() else []
+if win_sp.exists() and str(win_sp) not in sys.path:
+    sys.path.insert(0, str(win_sp))
+for sp in posix_sp:
+    if sp.exists() and str(sp) not in sys.path:
+        sys.path.insert(0, str(sp))
+
 from app.main import app
 
 def main() -> None:

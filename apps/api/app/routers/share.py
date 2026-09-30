@@ -1,0 +1,44 @@
+"""Public read-only report sharing API router (contracts/api.md, FR-033)."""
+from __future__ import annotations
+
+from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.config import MANDATED_DISCLAIMER
+from app.schemas import NarrativeSchema, PublicReportResponse
+from db.base import get_db
+from db.repo import get_report_by_share_token
+
+router = APIRouter(prefix="/api/share", tags=["share"])
+
+
+@router.get("/{token}", response_model=PublicReportResponse)
+async def get_public_report(
+    token: str,
+    session: AsyncSession = Depends(get_db),
+) -> PublicReportResponse:
+    """Retrieve public read-only report by capability share token."""
+    report = await get_report_by_share_token(session, token)
+    if not report:
+        raise HTTPException(
+            status_code=status.HTTP_410_GONE,
+            detail="Share link is no longer available or has expired.",
+        )
+
+    return PublicReportResponse(
+        report_id=report.id,
+        run_id=report.run_id,
+        verdict=report.verdict,
+        risk_score=report.risk_score,
+        disclaimer=report.disclaimer or MANDATED_DISCLAIMER,
+        checklist=report.checklist_json,  # type: ignore[arg-type]
+        reasons=report.reasons_json,  # type: ignore[arg-type]
+        recommended_actions=report.recommended_actions_json,  # type: ignore[arg-type]
+        narrative=NarrativeSchema(
+            status=report.narrative_status.value,
+            text=report.narrative_text,
+            model=report.narrative_model,
+        ),
+        annotated_image_url=report.annotated_ref,
+        generated_at=report.generated_at.isoformat().replace("+00:00", "Z"),
+    )
