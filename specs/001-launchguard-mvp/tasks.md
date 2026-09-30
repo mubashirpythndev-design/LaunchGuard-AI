@@ -88,56 +88,56 @@ can begin until this phase is complete.** No story label.
 
 ### Decision path — the rule engine
 
-- [ ] T014 [P] Create `apps/api/rule_engine/types.py` with frozen dataclasses `Severity`, `Verdict`, `Measurement`, `Overlay`, `Finding`, `Thresholds`, `ManualInputSet`, `StepResult`, `Decision`, plus `validate_finding()` raising `InadmissibleFinding` when a required field is missing (Constitution 2.III) and `is_threshold_ambiguous()`
-- [ ] T015 [P] Create `apps/api/rule_engine/config.py` with `MIN_CONFIDENCE_FOR_OK = 0.35`, the one-way `apply_confidence_floor()` that promotes `ok` to `warning` and never downgrades, the `Thresholds` defaults from `spec.md` Assumption 6, and the risk capacities `WARNING_CAPACITY = 2.0` / `CRITICAL_CAPACITY = 3.0`
-- [ ] T016 [P] Create `apps/api/rule_engine/registry.py` with the 15 stable check ids mapped to the 5 ordered steps (`body`, `fins`, `launchpad_area`, `weather_manual`, `decision`) and the labels used in the report
-- [ ] T017 Create `apps/api/rule_engine/verdict.py` implementing the three-rule order — any `critical` → `NO-GO`; else any `warning` or missing mandatory input → `HOLD`; else `GO` — returning `Decision` with ordered `reasons` and rule-derived `recommended_actions`
-- [ ] T018 Create `apps/api/rule_engine/risk.py` implementing the banded saturating score (GO 0–30, HOLD 40–69, NO-GO 70–100) with the `warning_evidence`, `critical_evidence`, and `low_confidence` accumulators
-- [ ] T019 Create `apps/api/rule_engine/manual.py` evaluating wind > 10 / > 15 m/s, poor visibility, heavy precipitation, and area-not-cleared, using the configured thresholds, and naming every absent mandatory input
-- [ ] T020 Create `apps/api/rule_engine/__init__.py` exporting the engine surface, and add a repo-level import guard test that fails if `rule_engine` imports anything from `cv` or `agent`
+- [x] T014 [P] Create `apps/api/rule_engine/types.py` with frozen dataclasses `Severity`, `Verdict`, `Measurement`, `Overlay`, `Finding`, `Thresholds`, `ManualInputSet`, `StepResult`, `Decision`, plus `validate_finding()` raising `InadmissibleFinding` when a required field is missing (Constitution 2.III) and `is_threshold_ambiguous()`
+- [x] T015 [P] Create `apps/api/rule_engine/config.py` with `MIN_CONFIDENCE_FOR_OK = 0.35`, the one-way `apply_confidence_floor()` that promotes `ok` to `warning` and never downgrades, the `Thresholds` defaults from `spec.md` Assumption 6, and the risk capacities `WARNING_CAPACITY = 2.0` / `CRITICAL_CAPACITY = 3.0`
+- [x] T016 [P] Create `apps/api/rule_engine/registry.py` with the 15 stable check ids mapped to the 5 ordered steps (`body`, `fins`, `launchpad_area`, `weather_manual`, `decision`) and the labels used in the report
+- [x] T017 Create `apps/api/rule_engine/verdict.py` implementing the three-rule order — any `critical` → `NO-GO`; else any `warning` or missing mandatory input → `HOLD`; else `GO` — returning `Decision` with ordered `reasons` and rule-derived `recommended_actions`
+- [x] T018 Create `apps/api/rule_engine/risk.py` implementing the banded saturating score (GO 0–30, HOLD 40–69, NO-GO 70–100) with the `warning_evidence`, `critical_evidence`, and `low_confidence` accumulators
+- [x] T019 Create `apps/api/rule_engine/manual.py` evaluating wind > 10 / > 15 m/s, poor visibility, heavy precipitation, and area-not-cleared, using the configured thresholds, and naming every absent mandatory input
+- [x] T020 Create `apps/api/rule_engine/__init__.py` exporting the engine surface, and add a repo-level import guard test that fails if `rule_engine` imports anything from `cv` or `agent`
 
 ### Persistence
 
-- [ ] T021 [P] Create `apps/api/db/base.py` with the SQLAlchemy 2 engine, `async_sessionmaker`, and the `DATABASE_URL` default
-- [ ] T022 Create `apps/api/db/models.py` with all 8 tables — `runs`, `findings`, `danger_zones`, `checklist_steps`, `manual_inputs`, `run_events`, `reports`, `demo_scenarios` — including the `confidence BETWEEN 0.0 AND 1.0` check constraint and the unique constraints on `(run_id, position)` and `(run_id, seq)`
-- [ ] T023 Create `apps/api/db/repo.py` with data-access functions only: run create/update, finding append, zone upsert/delete, manual-input upsert, event append with monotonic `seq`, report upsert, demo-scenario read
-- [ ] T024 [P] Create `apps/api/db/__init__.py` and wire table creation into the FastAPI lifespan in `apps/api/app/main.py`
+- [x] T021 [P] Create `apps/api/db/base.py` with the SQLAlchemy 2 engine, `async_sessionmaker`, and the `DATABASE_URL` default
+- [x] T022 Create `apps/api/db/models.py` with all 8 tables — `runs`, `findings`, `danger_zones`, `checklist_steps`, `manual_inputs`, `run_events`, `reports`, `demo_scenarios` — including the `confidence BETWEEN 0.0 AND 1.0` check constraint and the unique constraints on `(run_id, position)` and `(run_id, seq)`
+- [x] T023 Create `apps/api/db/repo.py` with data-access functions only: run create/update, finding append, zone upsert/delete, manual-input upsert, event append with monotonic `seq`, report upsert, demo-scenario read
+- [x] T024 [P] Create `apps/api/db/__init__.py` and wire table creation into the FastAPI lifespan in `apps/api/app/main.py`
 
 ### Streaming substrate
 
-- [ ] T025 Create `apps/api/app/events.py` — an in-process `asyncio` pub/sub keyed by `run_id` that **persists every event to `run_events` before publishing it**, assigns the monotonic `seq`, supports `Last-Event-ID` replay from the database, emits a `:heartbeat` comment every 15 s, and unsubscribes on disconnect
-- [ ] T026 Create `apps/api/app/main.py` with the app factory, CORS, and the lifespan hook that opens `AsyncSqliteSaver.from_conn_string(settings.checkpoint_db)` and **closes it on shutdown** (an unclosed checkpoint connection makes the graph appear to hang), and that reconciles runs left `running` per research R12
-- [ ] T027 [P] Create `apps/api/app/config.py` reading settings via `pydantic-settings`, exposing `MIN_CONFIDENCE_FOR_OK` and the thresholds through `GET /api/config` together with the mandated disclaimer string
-- [ ] T028 Create `apps/api/app/openapi.py` assembling the OpenAPI document, with response models on every route so the generated contract is complete rather than `any`-shaped
+- [x] T025 Create `apps/api/app/events.py` — an in-process `asyncio` pub/sub keyed by `run_id` that **persists every event to `run_events` before publishing it**, assigns the monotonic `seq`, supports `Last-Event-ID` replay from the database, emits a `:heartbeat` comment every 15 s, and unsubscribes on disconnect
+- [x] T026 Create `apps/api/app/main.py` with the app factory, CORS, and the lifespan hook that opens `AsyncSqliteSaver.from_conn_string(settings.checkpoint_db)` and **closes it on shutdown** (an unclosed checkpoint connection makes the graph appear to hang), and that reconciles runs left `running` per research R12
+- [x] T027 [P] Create `apps/api/app/config.py` reading settings via `pydantic-settings`, exposing `MIN_CONFIDENCE_FOR_OK` and the thresholds through `GET /api/config` together with the mandated disclaimer string
+- [x] T028 Create `apps/api/app/openapi.py` assembling the OpenAPI document, with response models on every route so the generated contract is complete rather than `any`-shaped
 
 ### Web foundations
 
-- [ ] T029 Run `pnpm generate` to produce `packages/contract/src/` (TypeScript types + Zod v4 schemas) from `apps/api`
-- [ ] T030 Create `apps/web/lib/schemas.ts` as **re-exports only** from `@launchguard/contract` — zero type declarations, zero hand-written API types (Constitution 3.I)
-- [ ] T031 [P] Create `apps/web/lib/api-client.ts` wrapping the generated SDK with the base URL and the typed error envelope
-- [ ] T032 [P] Create `apps/web/lib/sse.ts` — a typed `EventSource` wrapper that sends `Last-Event-ID` on reconnect, re-dispatches `Last-Event-ID` from the previous connection, and exposes a reducer-friendly event union
-- [ ] T033 [P] Create `apps/web/lib/hedged.ts` as the single source of hedged user-facing copy, exporting `hedged()` and the banned certainty-word and certification-claim lists
-- [ ] T034 Create `apps/web/app/api/[...path]/route.ts` — the SSE-safe proxy with `runtime = 'nodejs'`, `dynamic = 'force-dynamic'`, `Cache-Control: no-cache, no-transform`, `X-Accel-Buffering: no`, upstream `Content-Length` stripped, and teardown on `req.signal`
-- [ ] T035 [P] Create `apps/web/app/providers.tsx` mounting the TanStack Query client, the shadcn `Toaster`, and the `MotionSafe` boundary
-- [ ] T036 [P] Create `apps/web/components/verdict/VerdictBadge.tsx` rendering verdict as **text + icon + colour**, static, with no React Bits and no motion
-- [ ] T037 [P] Create `apps/web/components/verdict/Disclaimer.tsx` rendering the exact mandated string, shared by all five screens
-- [ ] T038 [P] Create `apps/web/components/verdict/SeverityIndicator.tsx` rendering severity as text + icon + colour, legible in black and white
-- [ ] T039 Create `apps/web/hooks/use-reduced-motion.ts` and `apps/web/components/verdict/MotionSafe.tsx` — when reduced motion is preferred, React Bits are **not mounted at all** rather than mounted with a zero duration
-- [ ] T040 Create `apps/web/app/globals.css` with the dark mission-control shadcn theme and the `--go` / `--hold` / `--nogo` tokens, plus the print stylesheet that keeps the report legible in black and white
+- [x] T029 Run `pnpm generate` to produce `packages/contract/src/` (TypeScript types + Zod v4 schemas) from `apps/api`
+- [x] T030 Create `apps/web/lib/schemas.ts` as **re-exports only** from `@launchguard/contract` — zero type declarations, zero hand-written API types (Constitution 3.I)
+- [x] T031 [P] Create `apps/web/lib/api-client.ts` wrapping the generated SDK with the base URL and the typed error envelope
+- [x] T032 [P] Create `apps/web/lib/sse.ts` — a typed `EventSource` wrapper that sends `Last-Event-ID` on reconnect, re-dispatches `Last-Event-ID` from the previous connection, and exposes a reducer-friendly event union
+- [x] T033 [P] Create `apps/web/lib/hedged.ts` as the single source of hedged user-facing copy, exporting `hedged()` and the banned certainty-word and certification-claim lists
+- [x] T034 Create `apps/web/app/api/[...path]/route.ts` — the SSE-safe proxy with `runtime = 'nodejs'`, `dynamic = 'force-dynamic'`, `Cache-Control: no-cache, no-transform`, `X-Accel-Buffering: no`, upstream `Content-Length` stripped, and teardown on `req.signal`
+- [x] T035 [P] Create `apps/web/app/providers.tsx` mounting the TanStack Query client, the shadcn `Toaster`, and the `MotionSafe` boundary
+- [x] T036 [P] Create `apps/web/components/verdict/VerdictBadge.tsx` rendering verdict as **text + icon + colour**, static, with no React Bits and no motion
+- [x] T037 [P] Create `apps/web/components/verdict/Disclaimer.tsx` rendering the exact mandated string, shared by all five screens
+- [x] T038 [P] Create `apps/web/components/verdict/SeverityIndicator.tsx` rendering severity as text + icon + colour, legible in black and white
+- [x] T039 Create `apps/web/hooks/use-reduced-motion.ts` and `apps/web/components/verdict/MotionSafe.tsx` — when reduced motion is preferred, React Bits are **not mounted at all** rather than mounted with a zero duration
+- [x] T040 Create `apps/web/app/globals.css` with the dark mission-control shadcn theme and the `--go` / `--hold` / `--nogo` tokens, plus the print stylesheet that keeps the report legible in black and white
 
 ### Foundational tests (REQUIRED by Constitution 5.II)
 
-- [ ] T041 [P] Pytest verdict matrix in `apps/api/tests/unit/test_verdict.py` — every combination of `critical` / `warning` / `ok` and present / missing mandatory inputs against the expected verdict, with `no_network` asserted
-- [ ] T042 [P] Pytest risk bands in `apps/api/tests/unit/test_risk.py` — assert GO ≤ 30, HOLD ∈ 40–69, NO-GO ≥ 70, and that the score is order-independent and never an input to the verdict
-- [ ] T043 [P] Pytest confidence floor in `apps/api/tests/unit/test_config.py` — `ok` at 0.34 floors to `warning`; `critical` at 0.20 stays `critical`; `apply_confidence_floor` never returns `ok` below 0.35
-- [ ] T044 [P] Pytest manual rules in `apps/api/tests/unit/test_manual.py` — wind 10.0 / 15.0 boundaries on the less-severe side, poor visibility, heavy precipitation, area-not-cleared, and every absent input named
-- [ ] T045 [P] Pytest measurement ambiguity in `apps/api/tests/unit/test_ambiguity.py` — a fin angle within 1.5° of a threshold yields a `near_threshold_note`; outside it does not
-- [ ] T046 [P] Pytest import-isolation guard in `apps/api/tests/unit/test_rule_engine_isolation.py` — assert `rule_engine` imports nothing from `cv` or `agent` by walking the module graph
-- [ ] T047 [P] Pytest SSE fan-out in `apps/api/tests/unit/test_events.py` — two subscribers both receive every event, `seq` is gapless, and a subscriber reconnecting with `Last-Event-ID` receives no duplicates
-- [ ] T048 [P] Pytest startup recovery in `apps/api/tests/unit/test_recovery.py` — a run interrupted at a checkpoint becomes `paused`; a crashed run becomes `failed` with `interrupted_by_restart` and never a verdict
-- [ ] T049 [P] Pytest OpenAPI conformance in `apps/api/tests/contract/test_openapi.py` — every declared route has a response model, and regenerating `packages/contract` produces no diff
-- [ ] T050 [P] Vitest for the decision-critical components in `apps/web/tests/verdict.test.tsx` — `VerdictBadge` renders text and an icon for each of GO / HOLD / NO-GO, `Disclaimer` renders the exact mandated string, and `SeverityIndicator` never conveys state by colour alone
-- [ ] T051 [P] Vitest for `MotionSafe` in `apps/web/tests/motion-safe.test.tsx` — with reduced motion preferred, a React Bits child is not rendered
+- [x] T041 [P] Pytest verdict matrix in `apps/api/tests/unit/test_verdict.py` — every combination of `critical` / `warning` / `ok` and present / missing mandatory inputs against the expected verdict, with `no_network` asserted
+- [x] T042 [P] Pytest risk bands in `apps/api/tests/unit/test_risk.py` — assert GO ≤ 30, HOLD ∈ 40–69, NO-GO ≥ 70, and that the score is order-independent and never an input to the verdict
+- [x] T043 [P] Pytest confidence floor in `apps/api/tests/unit/test_config.py` — `ok` at 0.34 floors to `warning`; `critical` at 0.20 stays `critical`; `apply_confidence_floor` never returns `ok` below 0.35
+- [x] T044 [P] Pytest manual rules in `apps/api/tests/unit/test_manual.py` — wind 10.0 / 15.0 boundaries on the less-severe side, poor visibility, heavy precipitation, area-not-cleared, and every absent input named
+- [x] T045 [P] Pytest measurement ambiguity in `apps/api/tests/unit/test_ambiguity.py` — a fin angle within 1.5° of a threshold yields a `near_threshold_note`; outside it does not
+- [x] T046 [P] Pytest import-isolation guard in `apps/api/tests/unit/test_rule_engine_isolation.py` — assert `rule_engine` imports nothing from `cv` or `agent` by walking the module graph
+- [x] T047 [P] Pytest SSE fan-out in `apps/api/tests/unit/test_events.py` — two subscribers both receive every event, `seq` is gapless, and a subscriber reconnecting with `Last-Event-ID` receives no duplicates
+- [x] T048 [P] Pytest startup recovery in `apps/api/tests/unit/test_recovery.py` — a run interrupted at a checkpoint becomes `paused`; a crashed run becomes `failed` with `interrupted_by_restart` and never a verdict
+- [x] T049 [P] Pytest OpenAPI conformance in `apps/api/tests/contract/test_openapi.py` — every declared route has a response model, and regenerating `packages/contract` produces no diff
+- [x] T050 [P] Vitest for the decision-critical components in `apps/web/tests/verdict.test.tsx` — `VerdictBadge` renders text and an icon for each of GO / HOLD / NO-GO, `Disclaimer` renders the exact mandated string, and `SeverityIndicator` never conveys state by colour alone
+- [x] T051 [P] Vitest for `MotionSafe` in `apps/web/tests/motion-safe.test.tsx` — with reduced motion preferred, a React Bits child is not rendered
 
 **Checkpoint**: A verdict is computable and testable with no model, no network, and no CV code
 importable from the rule engine. This is the gate that makes Constitution 2.I true before a
