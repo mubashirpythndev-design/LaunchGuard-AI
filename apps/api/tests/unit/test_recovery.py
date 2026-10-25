@@ -1,4 +1,5 @@
 """Unit test for startup recovery of interrupted runs (Constitution 2.II, R12, T048)."""
+
 from __future__ import annotations
 
 from collections.abc import AsyncGenerator

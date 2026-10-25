@@ -59,12 +59,14 @@ export function VerdictBadge({
   const Icon = config.icon;
 
   return (
-    <span
-      data-testid={`verdict-badge-${verdict.toLowerCase()}`}
-      className={`inline-flex items-center border rounded-md font-mono tracking-wider select-none ${config.styles} ${SIZE_STYLES[size]} ${className}`}
-    >
-      <Icon className={`${ICON_SIZES[size]} shrink-0`} aria-hidden="true" />
-      <span>{config.label}</span>
-    </span>
+    <div data-testid="verdict-badge" className="inline-flex">
+      <span
+        data-testid={`verdict-badge-${verdict.toLowerCase()}`}
+        className={`inline-flex items-center border rounded-md font-mono tracking-wider select-none ${config.styles} ${SIZE_STYLES[size]} ${className}`}
+      >
+        <Icon className={`${ICON_SIZES[size]} shrink-0`} aria-hidden="true" />
+        <span>{config.label}</span>
+      </span>
+    </div>
   );
 }

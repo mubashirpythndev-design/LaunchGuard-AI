@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { IBM_Plex_Sans, IBM_Plex_Mono } from "next/font/google";
-import { ThemeProvider } from "next-themes";
-import { Toaster } from "sonner";
+import { Providers } from "./providers";
 import "./globals.css";
 
 const sans = IBM_Plex_Sans({
@@ -24,11 +23,10 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" suppressHydrationWarning className={`${sans.variable} ${mono.variable}`}>
-      <body className="min-h-screen bg-background text-foreground font-sans antialiased">
-        <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
+      <body suppressHydrationWarning className="min-h-screen bg-background text-foreground font-sans antialiased">
+        <Providers>
           {children}
-          <Toaster position="bottom-right" />
-        </ThemeProvider>
+        </Providers>
       </body>
     </html>
   );

@@ -1,4 +1,5 @@
 """Configuration constants and fail-safe confidence floor for rule engine."""
+
 from __future__ import annotations
 
 from dataclasses import replace
@@ -26,5 +27,12 @@ def apply_confidence_floor(finding: Finding) -> Finding:
             finding,
             severity=Severity.WARNING,
             message=msg,
+            degraded=True,
+        )
+    if finding.confidence < MIN_CONFIDENCE_FOR_OK or finding.degraded:
+        return replace(
+            finding,
+            severity=Severity.WARNING if finding.severity == Severity.OK else finding.severity,
+            degraded=True,
         )
     return finding

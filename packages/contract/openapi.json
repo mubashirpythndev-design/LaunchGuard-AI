@@ -65,8 +65,7 @@
                 "$ref": "#/components/schemas/Body_create_inspection_api_inspections_post"
               }
             }
-          },
-          "required": true
+          }
         },
         "responses": {
           "201": {
@@ -77,6 +76,290 @@
                   "$ref": "#/components/schemas/CreateRunResponse"
                 }
               }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/rockets": {
+      "post": {
+        "tags": [
+          "rockets"
+        ],
+        "summary": "Create Rocket Profile",
+        "description": "Register a new rocket vehicle profile.",
+        "operationId": "create_rocket_profile_api_rockets_post",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateRocketPayload"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RocketResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "rockets"
+        ],
+        "summary": "Get Rockets List",
+        "description": "Retrieve list of registered rocket profiles with baseline counts.",
+        "operationId": "get_rockets_list_api_rockets_get",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 50,
+              "title": "Limit"
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0,
+              "title": "Offset"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RocketListResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/rockets/{rocket_id}": {
+      "get": {
+        "tags": [
+          "rockets"
+        ],
+        "summary": "Get Rocket Profile",
+        "description": "Retrieve details and reference images for a specific rocket profile.",
+        "operationId": "get_rocket_profile_api_rockets__rocket_id__get",
+        "parameters": [
+          {
+            "name": "rocket_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Rocket Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RocketResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "rockets"
+        ],
+        "summary": "Delete Rocket Profile",
+        "description": "Delete a rocket profile and all cascaded golden reference records.",
+        "operationId": "delete_rocket_profile_api_rockets__rocket_id__delete",
+        "parameters": [
+          {
+            "name": "rocket_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Rocket Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Rocket profile deleted successfully."
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/rockets/{rocket_id}/references/{quadrant}": {
+      "post": {
+        "tags": [
+          "rockets"
+        ],
+        "summary": "Upload Golden Reference",
+        "description": "Upload or update a golden reference image for a specific quadrant.",
+        "operationId": "upload_golden_reference_api_rockets__rocket_id__references__quadrant__post",
+        "parameters": [
+          {
+            "name": "rocket_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Rocket Id"
+            }
+          },
+          {
+            "name": "quadrant",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Quadrant"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_upload_golden_reference_api_rockets__rocket_id__references__quadrant__post"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UploadReferenceResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "rockets"
+        ],
+        "summary": "Get Golden Reference Image",
+        "description": "Retrieve raw image file for a rocket quadrant reference.",
+        "operationId": "get_golden_reference_image_api_rockets__rocket_id__references__quadrant__get",
+        "parameters": [
+          {
+            "name": "rocket_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Rocket Id"
+            }
+          },
+          {
+            "name": "quadrant",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Quadrant"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Binary golden reference image",
+            "content": {
+              "image/jpeg": {},
+              "image/png": {},
+              "image/webp": {}
             }
           },
           "422": {
@@ -107,49 +390,6 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/CreateRunResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/monitor/{run_id}/frame": {
-      "post": {
-        "tags": [
-          "monitor"
-        ],
-        "summary": "Analyze Frame",
-        "description": "Process a single video or camera frame against pad danger zone and hazard cues.",
-        "operationId": "analyze_frame_api_monitor__run_id__frame_post",
-        "parameters": [
-          {
-            "name": "run_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "title": "Run Id"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/FrameAnalysisResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
                 }
               }
             }
@@ -251,13 +491,56 @@
         }
       }
     },
+    "/api/monitor/{run_id}/frame": {
+      "post": {
+        "tags": [
+          "monitor"
+        ],
+        "summary": "Analyze Frame",
+        "description": "Fast-path processing of a single JPEG frame against danger zone (NFR-002, R4).",
+        "operationId": "analyze_frame_api_monitor__run_id__frame_post",
+        "parameters": [
+          {
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Run Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FrameAnalysisResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/monitor/{run_id}/log": {
       "get": {
         "tags": [
           "monitor"
         ],
         "summary": "Get Monitor Log",
-        "description": "Retrieve chronological log of monitor detections.",
+        "description": "Retrieve chronological log of monitor detections (oldest first).",
         "operationId": "get_monitor_log_api_monitor__run_id__log_get",
         "parameters": [
           {
@@ -295,6 +578,53 @@
       }
     },
     "/api/runs": {
+      "post": {
+        "tags": [
+          "runs"
+        ],
+        "summary": "Create Run Endpoint",
+        "description": "Create a new run entity (contracts/api.md).",
+        "operationId": "create_run_endpoint_api_runs_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/CreateRunPayload"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Payload"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreateRunResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
       "get": {
         "tags": [
           "runs"
@@ -415,6 +745,53 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/RunDetailResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/runs/{run_id}/findings": {
+      "get": {
+        "tags": [
+          "runs"
+        ],
+        "summary": "Get Run Findings",
+        "description": "Retrieve findings associated with a run.",
+        "operationId": "get_run_findings_api_runs__run_id__findings_get",
+        "parameters": [
+          {
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Run Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/FindingSchema"
+                  },
+                  "title": "Response Get Run Findings Api Runs  Run Id  Findings Get"
                 }
               }
             }
@@ -729,6 +1106,70 @@
         }
       }
     },
+    "/api/runs/{run_id}/quadrants/{quadrant}/{variant}": {
+      "get": {
+        "tags": [
+          "runs"
+        ],
+        "summary": "Get Quadrant Image",
+        "operationId": "get_quadrant_image_api_runs__run_id__quadrants__quadrant___variant__get",
+        "parameters": [
+          {
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Run Id"
+            }
+          },
+          {
+            "name": "quadrant",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "enum": [
+                "front",
+                "right",
+                "back",
+                "left"
+              ],
+              "type": "string",
+              "title": "Quadrant"
+            }
+          },
+          {
+            "name": "variant",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Variant"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Original quadrant image or server-rendered annotation",
+            "content": {
+              "image/jpeg": {},
+              "image/png": {},
+              "image/webp": {}
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/runs/{run_id}/image": {
       "get": {
         "tags": [
@@ -882,7 +1323,7 @@
           "demo"
         ],
         "summary": "Trigger Demo Scenario",
-        "description": "Launch a pipeline run using bundled scenario data.",
+        "description": "Launch a pipeline run using bundled scenario data through identical pipeline (FR-036).",
         "operationId": "trigger_demo_scenario_api_demo_scenarios__key__run_post",
         "parameters": [
           {
@@ -943,6 +1384,83 @@
       "Body_create_inspection_api_inspections_post": {
         "properties": {
           "file": {
+            "anyOf": [
+              {
+                "type": "string",
+                "contentMediaType": "application/octet-stream"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "File"
+          },
+          "rocket_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rocket Id"
+          },
+          "front": {
+            "anyOf": [
+              {
+                "type": "string",
+                "contentMediaType": "application/octet-stream"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Front"
+          },
+          "right": {
+            "anyOf": [
+              {
+                "type": "string",
+                "contentMediaType": "application/octet-stream"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Right"
+          },
+          "back": {
+            "anyOf": [
+              {
+                "type": "string",
+                "contentMediaType": "application/octet-stream"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Back"
+          },
+          "left": {
+            "anyOf": [
+              {
+                "type": "string",
+                "contentMediaType": "application/octet-stream"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Left"
+          }
+        },
+        "type": "object",
+        "title": "Body_create_inspection_api_inspections_post"
+      },
+      "Body_upload_golden_reference_api_rockets__rocket_id__references__quadrant__post": {
+        "properties": {
+          "file": {
             "type": "string",
             "contentMediaType": "application/octet-stream",
             "title": "File"
@@ -952,7 +1470,7 @@
         "required": [
           "file"
         ],
-        "title": "Body_create_inspection_api_inspections_post"
+        "title": "Body_upload_golden_reference_api_rockets__rocket_id__references__quadrant__post"
       },
       "ChecklistStepSchema": {
         "properties": {
@@ -1006,6 +1524,66 @@
         "type": "object",
         "title": "ConfigResponse",
         "description": "Schema returned by GET /api/config."
+      },
+      "CreateRocketPayload": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "Name"
+          },
+          "vehicle_class": {
+            "type": "string",
+            "maxLength": 50,
+            "minLength": 1,
+            "title": "Vehicle Class"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "vehicle_class"
+        ],
+        "title": "CreateRocketPayload"
+      },
+      "CreateRunPayload": {
+        "properties": {
+          "mode": {
+            "type": "string",
+            "title": "Mode",
+            "default": "inspection"
+          },
+          "source_type": {
+            "type": "string",
+            "title": "Source Type",
+            "default": "image_upload"
+          },
+          "rocket_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rocket Id"
+          }
+        },
+        "type": "object",
+        "title": "CreateRunPayload"
       },
       "CreateRunResponse": {
         "properties": {
@@ -1168,6 +1746,23 @@
       },
       "FindingSchema": {
         "properties": {
+          "quadrant": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "front",
+                  "right",
+                  "back",
+                  "left"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Quadrant"
+          },
           "module": {
             "type": "string",
             "title": "Module"
@@ -1813,6 +2408,102 @@
         ],
         "title": "PublicReportResponse"
       },
+      "QuadrantImageSchema": {
+        "properties": {
+          "quadrant": {
+            "type": "string",
+            "enum": [
+              "front",
+              "right",
+              "back",
+              "left"
+            ],
+            "title": "Quadrant"
+          },
+          "image_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Image Url"
+          },
+          "annotated_image_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Annotated Image Url"
+          },
+          "reference_image_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reference Image Url"
+          },
+          "aligned_image_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Aligned Image Url"
+          },
+          "heatmap_image_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Heatmap Image Url"
+          },
+          "width": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Width"
+          },
+          "height": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Height"
+          }
+        },
+        "type": "object",
+        "required": [
+          "quadrant"
+        ],
+        "title": "QuadrantImageSchema"
+      },
       "ReasonSchema": {
         "properties": {
           "check_id": {
@@ -1847,6 +2538,24 @@
       },
       "ReportResponse": {
         "properties": {
+          "rocket_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rocket Id"
+          },
+          "quadrants": {
+            "items": {
+              "$ref": "#/components/schemas/QuadrantImageSchema"
+            },
+            "type": "array",
+            "title": "Quadrants"
+          },
           "report_id": {
             "type": "string",
             "title": "Report Id"
@@ -1974,8 +2683,131 @@
         ],
         "title": "RequiredInputsResponse"
       },
+      "RocketListResponse": {
+        "properties": {
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/RocketResponse"
+            },
+            "type": "array",
+            "title": "Items"
+          }
+        },
+        "type": "object",
+        "required": [
+          "total",
+          "items"
+        ],
+        "title": "RocketListResponse"
+      },
+      "RocketReferenceItem": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "quadrant": {
+            "type": "string",
+            "title": "Quadrant"
+          },
+          "image_url": {
+            "type": "string",
+            "title": "Image Url"
+          },
+          "keypoint_count": {
+            "type": "integer",
+            "title": "Keypoint Count",
+            "default": 0
+          },
+          "created_at": {
+            "type": "string",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "quadrant",
+          "image_url",
+          "created_at"
+        ],
+        "title": "RocketReferenceItem"
+      },
+      "RocketResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "vehicle_class": {
+            "type": "string",
+            "title": "Vehicle Class"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes"
+          },
+          "created_at": {
+            "type": "string",
+            "title": "Created At"
+          },
+          "references": {
+            "items": {
+              "$ref": "#/components/schemas/RocketReferenceItem"
+            },
+            "type": "array",
+            "title": "References"
+          },
+          "reference_count": {
+            "type": "integer",
+            "title": "Reference Count",
+            "default": 0
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "vehicle_class",
+          "created_at"
+        ],
+        "title": "RocketResponse"
+      },
       "RunDetailResponse": {
         "properties": {
+          "rocket_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rocket Id"
+          },
+          "quadrants": {
+            "items": {
+              "$ref": "#/components/schemas/QuadrantImageSchema"
+            },
+            "type": "array",
+            "title": "Quadrants"
+          },
           "run_id": {
             "type": "string",
             "title": "Run Id"
@@ -2276,6 +3108,39 @@
         "type": "object",
         "title": "ThresholdsConfig",
         "description": "Configurable thresholds matching rule_engine.types.Thresholds."
+      },
+      "UploadReferenceResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "rocket_id": {
+            "type": "string",
+            "title": "Rocket Id"
+          },
+          "quadrant": {
+            "type": "string",
+            "title": "Quadrant"
+          },
+          "image_url": {
+            "type": "string",
+            "title": "Image Url"
+          },
+          "keypoint_count": {
+            "type": "integer",
+            "title": "Keypoint Count",
+            "default": 0
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "rocket_id",
+          "quadrant",
+          "image_url"
+        ],
+        "title": "UploadReferenceResponse"
       },
       "ValidationError": {
         "properties": {

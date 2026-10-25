@@ -15,33 +15,7 @@ export interface StepStartedPayload {
   label: string;
 }
 
-export interface FindingRaisedPayload {
-  module: string;
-  check_id: string;
-  severity: "ok" | "warning" | "critical";
-  message: string;
-  confidence: number;
-  metrics: Array<{
-    name: string;
-    value: number;
-    unit: string;
-    error_margin?: number | null;
-    threshold?: number | null;
-  }>;
-  overlay?: {
-    kind: string;
-    check_id: string;
-    points: number[][];
-    radius?: number | null;
-    start_deg?: number | null;
-    end_deg?: number | null;
-    label?: string | null;
-  } | null;
-  step_position: number;
-  degraded: boolean;
-  low_confidence_critical: boolean;
-  near_threshold_note?: string | null;
-}
+export type FindingRaisedPayload = import("@/lib/schemas").FindingSchema;
 
 export interface StepFinishedPayload {
   position: number;
@@ -114,10 +88,7 @@ export interface SseSubscriptionOptions {
   onOpen?: () => void;
 }
 
-export function subscribeToRunEvents(
-  runId: string,
-  options: SseSubscriptionOptions,
-): () => void {
+export function subscribeToRunEvents(runId: string, options: SseSubscriptionOptions): () => void {
   const url = `/api/runs/${encodeURIComponent(runId)}/stream`;
   const eventSource = new EventSource(url);
 
@@ -166,4 +137,19 @@ export function subscribeToRunEvents(
   return () => {
     eventSource.close();
   };
+}
+/** Normalize historical text reasons and current structured reasons for text-only views. */
+export function decisionReasonMessages(value: unknown): string[] {
+  if (!Array.isArray(value)) return [];
+  return value.flatMap((reason: unknown) => {
+    if (typeof reason === "string") return [reason];
+    if (
+      typeof reason === "object" &&
+      reason !== null &&
+      "message" in reason &&
+      typeof reason.message === "string"
+    )
+      return [reason.message];
+    return [];
+  });
 }

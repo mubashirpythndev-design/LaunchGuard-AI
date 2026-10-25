@@ -5,6 +5,7 @@ A run interrupted at a manual input checkpoint becomes 'paused'.
 A run that crashed mid-step becomes 'failed' with 'interrupted_by_restart'
 and never produces a verdict.
 """
+
 from __future__ import annotations
 
 from typing import Any

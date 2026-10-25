@@ -1,8 +1,14 @@
 """Pytest fixtures for LaunchGuard AI API testing."""
+
 import socket
+from collections.abc import AsyncGenerator
 from pathlib import Path
 
 import pytest
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from db import init_db
+from db.base import async_session_factory
 
 FIXTURES_IMAGES = Path(__file__).resolve().parent / "fixtures" / "images"
 
@@ -10,6 +16,19 @@ FIXTURES_IMAGES = Path(__file__).resolve().parent / "fixtures" / "images"
 @pytest.fixture
 def fixtures_dir() -> Path:
     return FIXTURES_IMAGES
+
+
+@pytest.fixture(autouse=True)
+async def setup_database() -> None:
+    """Ensure database schema is initialized for all test runs."""
+    await init_db()
+
+
+@pytest.fixture
+async def db_session() -> AsyncGenerator[AsyncSession, None]:
+    """Provide an AsyncSession for test functions."""
+    async with async_session_factory() as session:
+        yield session
 
 
 @pytest.fixture

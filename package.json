@@ -11,5 +11,8 @@
     "lint": "pnpm -r lint",
     "test": "pnpm -r test"
   },
-  "packageManager": "pnpm@12.6.0"
+  "packageManager": "pnpm@12.6.0",
+  "devDependencies": {
+    "@playwright/test": "^1.63.0"
+  }
 }

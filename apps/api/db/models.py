@@ -1,4 +1,5 @@
 """SQLAlchemy 2 database models for LaunchGuard AI (Constitution 3.V, data-model.md)."""
+
 from __future__ import annotations
 
 import enum
@@ -22,7 +23,7 @@ from sqlalchemy import (
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from db.base import Base
-from rule_engine.types import Severity, Verdict
+from rule_engine.types import Quadrant, Severity, Verdict
 
 
 def utc_now() -> datetime:
@@ -74,9 +75,7 @@ class RunModel(Base):
 
     __tablename__ = "runs"
 
-    id: Mapped[str] = mapped_column(
-        String(36), primary_key=True, default=generate_uuid
-    )
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=generate_uuid)
     mode: Mapped[RunMode] = mapped_column(
         sa.Enum(RunMode, native_enum=False, values_callable=lambda x: [e.value for e in x]),
         nullable=False,
@@ -86,6 +85,9 @@ class RunModel(Base):
         nullable=False,
     )
     source_ref: Mapped[str | None] = mapped_column(String(512), nullable=True)
+    rocket_id: Mapped[str | None] = mapped_column(
+        String(36), ForeignKey("rockets.id"), nullable=True
+    )
     status: Mapped[RunStatus] = mapped_column(
         sa.Enum(RunStatus, native_enum=False, values_callable=lambda x: [e.value for e in x]),
         nullable=False,
@@ -139,9 +141,7 @@ class FindingModel(Base):
 
     __tablename__ = "findings"
 
-    id: Mapped[str] = mapped_column(
-        String(36), primary_key=True, default=generate_uuid
-    )
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=generate_uuid)
     run_id: Mapped[str] = mapped_column(
         String(36), ForeignKey("runs.id", ondelete="CASCADE"), nullable=False, index=True
     )
@@ -160,10 +160,9 @@ class FindingModel(Base):
     overlay_json: Mapped[dict[str, Any] | None] = mapped_column(sa.JSON, nullable=True)
     step_position: Mapped[int] = mapped_column(SmallInteger, nullable=False, default=0)
     degraded: Mapped[bool] = mapped_column(sa.Boolean, nullable=False, default=False)
-    low_confidence_critical: Mapped[bool] = mapped_column(
-        sa.Boolean, nullable=False, default=False
-    )
+    low_confidence_critical: Mapped[bool] = mapped_column(sa.Boolean, nullable=False, default=False)
     near_threshold_note: Mapped[str | None] = mapped_column(Text, nullable=True)
+    quadrant: Mapped[Quadrant | None] = mapped_column(String(10), nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, default=utc_now
     )
@@ -175,14 +174,29 @@ class FindingModel(Base):
     )
 
 
+class InspectionImageModel(Base):
+    """Immutable capture metadata, including explicitly missing quadrants."""
+
+    __tablename__ = "inspection_images"
+    __table_args__ = (UniqueConstraint("run_id", "quadrant"),)
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=generate_uuid)
+    run_id: Mapped[str] = mapped_column(
+        String(36), ForeignKey("runs.id", ondelete="CASCADE"), index=True
+    )
+    quadrant: Mapped[Quadrant] = mapped_column(String(10))
+    image_path: Mapped[str | None] = mapped_column(String(512), nullable=True)
+    content_type: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    width: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    height: Mapped[int | None] = mapped_column(Integer, nullable=True)
+
+
 class DangerZoneModel(Base):
     """User-defined or preset safety exclusion zone polygon."""
 
     __tablename__ = "danger_zones"
 
-    id: Mapped[str] = mapped_column(
-        String(36), primary_key=True, default=generate_uuid
-    )
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=generate_uuid)
     run_id: Mapped[str] = mapped_column(
         String(36), ForeignKey("runs.id", ondelete="CASCADE"), nullable=False, unique=True
     )
@@ -205,9 +219,7 @@ class ChecklistStepModel(Base):
 
     __tablename__ = "checklist_steps"
 
-    id: Mapped[str] = mapped_column(
-        String(36), primary_key=True, default=generate_uuid
-    )
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=generate_uuid)
     run_id: Mapped[str] = mapped_column(
         String(36), ForeignKey("runs.id", ondelete="CASCADE"), nullable=False, index=True
     )
@@ -235,9 +247,7 @@ class ManualInputModel(Base):
 
     __tablename__ = "manual_inputs"
 
-    id: Mapped[str] = mapped_column(
-        String(36), primary_key=True, default=generate_uuid
-    )
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=generate_uuid)
     run_id: Mapped[str] = mapped_column(
         String(36), ForeignKey("runs.id", ondelete="CASCADE"), nullable=False, index=True
     )
@@ -253,9 +263,7 @@ class ManualInputModel(Base):
 
     run: Mapped[RunModel] = relationship("RunModel", back_populates="manual_inputs")
 
-    __table_args__ = (
-        UniqueConstraint("run_id", "field", name="uq_manual_inputs_run_field"),
-    )
+    __table_args__ = (UniqueConstraint("run_id", "field", name="uq_manual_inputs_run_field"),)
 
 
 class RunEventModel(Base):
@@ -276,9 +284,7 @@ class RunEventModel(Base):
 
     run: Mapped[RunModel] = relationship("RunModel", back_populates="events")
 
-    __table_args__ = (
-        UniqueConstraint("run_id", "seq", name="uq_run_events_run_seq"),
-    )
+    __table_args__ = (UniqueConstraint("run_id", "seq", name="uq_run_events_run_seq"),)
 
 
 class ReportModel(Base):
@@ -286,9 +292,7 @@ class ReportModel(Base):
 
     __tablename__ = "reports"
 
-    id: Mapped[str] = mapped_column(
-        String(36), primary_key=True, default=generate_uuid
-    )
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=generate_uuid)
     run_id: Mapped[str] = mapped_column(
         String(36), ForeignKey("runs.id", ondelete="CASCADE"), nullable=False, unique=True
     )
@@ -297,11 +301,11 @@ class ReportModel(Base):
         nullable=False,
     )
     risk_score: Mapped[int] = mapped_column(SmallInteger, nullable=False)
-    reasons_json: Mapped[list[str]] = mapped_column(sa.JSON, nullable=False, default=list)
+    reasons_json: Mapped[list[Any]] = mapped_column(sa.JSON, nullable=False, default=list)
     checklist_json: Mapped[list[dict[str, Any]]] = mapped_column(
         sa.JSON, nullable=False, default=list
     )
-    recommended_actions_json: Mapped[list[str]] = mapped_column(
+    recommended_actions_json: Mapped[list[Any]] = mapped_column(
         sa.JSON, nullable=False, default=list
     )
     narrative_status: Mapped[NarrativeStatus] = mapped_column(
@@ -336,3 +340,47 @@ class DemoScenarioModel(Base):
     manual_inputs_json: Mapped[dict[str, Any]] = mapped_column(sa.JSON, nullable=False)
     zone_points_json: Mapped[list[list[float]] | None] = mapped_column(sa.JSON, nullable=True)
     sort_order: Mapped[int] = mapped_column(SmallInteger, nullable=False, default=0)
+
+
+class RocketModel(Base):
+    """Rocket vehicle profile for golden reference baseline tracking."""
+
+    __tablename__ = "rockets"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=generate_uuid)
+    name: Mapped[str] = mapped_column(String(100), nullable=False)
+    vehicle_class: Mapped[str] = mapped_column(String(50), nullable=False)
+    notes: Mapped[str | None] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, default=utc_now
+    )
+
+    references: Mapped[list[RocketReferenceModel]] = relationship(
+        "RocketReferenceModel",
+        back_populates="rocket",
+        cascade="all, delete-orphan",
+        lazy="selectin",
+    )
+
+
+class RocketReferenceModel(Base):
+    """Baseline golden reference image for a specific quadrant of a rocket."""
+
+    __tablename__ = "rocket_references"
+    __table_args__ = (
+        UniqueConstraint("rocket_id", "quadrant", name="uq_rocket_quadrant"),
+    )
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=generate_uuid)
+    rocket_id: Mapped[str] = mapped_column(
+        String(36), ForeignKey("rockets.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    # Quadrant: 'front', 'right', 'back', 'left'
+    quadrant: Mapped[str] = mapped_column(String(10), nullable=False)
+    image_path: Mapped[str] = mapped_column(String(512), nullable=False)
+    keypoint_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, default=utc_now
+    )
+
+    rocket: Mapped[RocketModel] = relationship("RocketModel", back_populates="references")

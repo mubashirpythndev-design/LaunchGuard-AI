@@ -1,4 +1,5 @@
 """Database engine, session factory, and declarative base for LaunchGuard AI."""
+
 from __future__ import annotations
 
 import os

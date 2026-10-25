@@ -98,11 +98,19 @@
     background: #ffffff !important;
     color: #000000 !important;
   }
-  .no-print {
+  .no-print,
+  button,
+  nav,
+  header {
     display: none !important;
   }
   * {
-    border-color: #000000 !important;
+    border-color: #71717a !important;
     box-shadow: none !important;
+    color: #000000 !important;
+  }
+  img {
+    filter: grayscale(100%);
+    max-width: 100% !important;
   }
 }

@@ -1,48 +1,125 @@
+# ==============================================================================
+# LaunchGuard AI - Production .gitignore
+# ==============================================================================
+
 # Dependencies
 node_modules/
 .pnpm-store/
 
-# Generated contract source
+# Generated OpenAPI Contract Source (Constitution: src/ is generated and never hand-edited)
 packages/contract/src/
 
-# Python
+# Python Environments, Caches & Bytecode
 __pycache__/
 *.py[cod]
 *$py.class
+*.so
+.Python
 .venv/
 venv/
+ENV/
+env/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
 *.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Python Tooling Caches
 .mypy_cache/
 .ruff_cache/
 .pytest_cache/
 
 # Databases and Local State
 *.db
+*.db-journal
+*.db-wal
+*.db-shm
 *.sqlite
 *.sqlite3
 launchguard.db
+checkpoints.db
 checkpoints.sqlite
+report-verification.db
+report-verification-checkpoints.db
 
-# Media uploads & artifacts
+# Media Uploads & Runtime Artifacts
 media/
-data/
+apps/api/media/
+data/*.db
+apps/api/data/*.db
+data/references/
+apps/api/data/references/
 
-# Next.js build output
+# Next.js Build Output
 .next/
+apps/web/.next/
 out/
+apps/web/out/
+*.tsbuildinfo
+next-env.d.ts.bak
 
-# Environment files
+# Environment Variables & Secrets (Keep .env.example tracked)
 .env
 .env*.local
+.env.production
+.env.staging
 apps/api/.env
-apps/web/.env*
+apps/web/.env
+apps/web/.env*.local
 
-# Testing & logs
+# Testing, Coverage & Playwright Reports
 coverage/
 playwright-report/
 test-results/
-*.log
+blob-report/
+.nyc_output/
 
-# OS
+# Logs & Temporary Debug Files
+*.log
+*.log.*
+debug.log
+apps/web/.runtime-web.*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Operating System Files
 .DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
 Thumbs.db
+[Dd]esktop.ini
+
+# IDE & Editor Directories
+.idea/
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+*.sublime-workspace
+*.sublime-project
+*.swp
+*.swo
+
+# Temporary Screenshots & Dumps
+image.png
+*.tmp
+*.temp

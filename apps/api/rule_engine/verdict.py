@@ -3,6 +3,7 @@
 The ONLY producer of GO / HOLD / NO-GO verdicts.
 Imports nothing from cv/ or agent/.
 """
+
 from __future__ import annotations
 
 from collections.abc import Sequence
@@ -10,6 +11,7 @@ from datetime import UTC, datetime
 from typing import Literal
 
 from rule_engine.config import apply_confidence_floor
+from rule_engine.escalation import apply_cue_escalation
 from rule_engine.manual import evaluate_manual_inputs, get_missing_mandatory_inputs
 from rule_engine.risk import compute_risk_score
 from rule_engine.types import (
@@ -36,6 +38,10 @@ MODULE_ACTIONS: dict[str, str] = {
         "Resolve the flagged environmental or procedural condition before proceeding."
     ),
     "manual": "Resolve the flagged environmental or procedural condition before proceeding.",
+    "reference": (
+        "Re-capture the flagged quadrant and inspect the changed surface against its golden "
+        "reference."
+    ),
 }
 
 
@@ -58,9 +64,7 @@ def _build_checklist(
     if missing_inputs:
         s4_status = "blocked"
 
-    s5_status: Literal["passed", "failed"] = (
-        "passed" if verdict == Verdict.GO else "failed"
-    )
+    s5_status: Literal["passed", "failed"] = "passed" if verdict == Verdict.GO else "failed"
 
     return (
         StepResult(position=1, step_key="body", status=s1_status, finding_count=s1_count),
@@ -124,6 +128,9 @@ def make_decision(
 
     missing_inputs = get_missing_mandatory_inputs(manual_inputs)
 
+    # 2.5 Apply deterministic escalation rules across findings (US3, T094)
+    processed_findings = apply_cue_escalation(processed_findings)
+
     # 3. Deterministic verdict
     verdict = decide_verdict(processed_findings, missing_inputs)
 
@@ -132,12 +139,8 @@ def make_decision(
 
     # 5. Extract structured reasons (ordered: CRITICAL first, then WARNING, then position)
     severity_order = {Severity.CRITICAL: 0, Severity.WARNING: 1, Severity.OK: 2}
-    non_ok_findings = [
-        f for f in processed_findings if f.severity != Severity.OK
-    ]
-    non_ok_findings.sort(
-        key=lambda f: (severity_order[f.severity], f.step_position, f.check_id)
-    )
+    non_ok_findings = [f for f in processed_findings if f.severity != Severity.OK]
+    non_ok_findings.sort(key=lambda f: (severity_order[f.severity], f.step_position, f.check_id))
 
     reasons: list[str] = [f.message for f in non_ok_findings]
     if not reasons:

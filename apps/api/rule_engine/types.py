@@ -4,12 +4,16 @@ Constitution 2.I & 2.III:
 - Frozen domain dataclasses representing the decision model.
 - Imports NOTHING from cv or agent.
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime
 from enum import StrEnum
 from typing import Literal
+
+Quadrant = Literal["front", "right", "back", "left"]
+QUADRANTS: tuple[Quadrant, ...] = ("front", "right", "back", "left")
 
 
 class Severity(StrEnum):
@@ -72,6 +76,7 @@ class Finding:
     degraded: bool = False
     low_confidence_critical: bool = False
     near_threshold_note: str | None = None
+    quadrant: Quadrant | None = None
 
 
 class InadmissibleFinding(Exception):
@@ -144,6 +149,15 @@ class StepResult:
     step_key: str
     status: Literal["pending", "running", "passed", "failed", "blocked"]
     finding_count: int = 0
+
+
+@dataclass(frozen=True)
+class Reason:
+    check_id: str
+    severity: Severity
+    message: str
+    confidence: float
+    ambiguous: bool = False
 
 
 @dataclass(frozen=True)

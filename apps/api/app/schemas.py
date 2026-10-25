@@ -1,11 +1,12 @@
 """Pydantic schemas for LaunchGuard AI API contracts (contracts/api.md, Constitution 3.I)."""
+
 from __future__ import annotations
 
 from typing import Any
 
 from pydantic import BaseModel, Field
 
-from rule_engine.types import Severity, Verdict
+from rule_engine.types import Quadrant, Severity, Verdict
 
 # --- Common & Error Schemas ---
 
@@ -42,6 +43,7 @@ class OverlaySchema(BaseModel):
 
 
 class FindingSchema(BaseModel):
+    quadrant: Quadrant | None = None
     module: str
     check_id: str
     severity: Severity
@@ -85,6 +87,12 @@ class NarrativeSchema(BaseModel):
 # --- Run Lifecycle Schemas ---
 
 
+class CreateRunPayload(BaseModel):
+    mode: str = "inspection"
+    source_type: str = "image_upload"
+    rocket_id: str | None = None
+
+
 class CreateRunResponse(BaseModel):
     run_id: str
     mode: str
@@ -99,7 +107,20 @@ class RunDetailSource(BaseModel):
     url: str | None = None
 
 
+class QuadrantImageSchema(BaseModel):
+    quadrant: Quadrant
+    image_url: str | None = None
+    annotated_image_url: str | None = None
+    reference_image_url: str | None = None
+    aligned_image_url: str | None = None
+    heatmap_image_url: str | None = None
+    width: int | None = None
+    height: int | None = None
+
+
 class RunDetailResponse(BaseModel):
+    rocket_id: str | None = None
+    quadrants: list[QuadrantImageSchema] = Field(default_factory=list)
     run_id: str
     mode: str
     source_type: str
@@ -213,6 +234,8 @@ class MonitorLogResponse(BaseModel):
 
 
 class ReportResponse(BaseModel):
+    rocket_id: str | None = None
+    quadrants: list[QuadrantImageSchema] = Field(default_factory=list)
     report_id: str
     run_id: str
     verdict: Verdict
@@ -271,3 +294,43 @@ class EventMessageResponse(BaseModel):
     event_type: str
     payload: dict[str, Any]
     at: str
+
+
+# --- Rocket Profile Schemas ---
+
+
+class CreateRocketPayload(BaseModel):
+    name: str = Field(..., min_length=1, max_length=100)
+    vehicle_class: str = Field(..., min_length=1, max_length=50)
+    notes: str | None = None
+
+
+class RocketReferenceItem(BaseModel):
+    id: str
+    quadrant: str
+    image_url: str
+    keypoint_count: int = 0
+    created_at: str
+
+
+class RocketResponse(BaseModel):
+    id: str
+    name: str
+    vehicle_class: str
+    notes: str | None = None
+    created_at: str
+    references: list[RocketReferenceItem] = Field(default_factory=list)
+    reference_count: int = 0
+
+
+class RocketListResponse(BaseModel):
+    total: int
+    items: list[RocketResponse]
+
+
+class UploadReferenceResponse(BaseModel):
+    id: str
+    rocket_id: str
+    quadrant: str
+    image_url: str
+    keypoint_count: int = 0

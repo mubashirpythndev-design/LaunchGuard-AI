@@ -1,4 +1,5 @@
 """OpenAPI schema generator and assembler for contract export (T028, Constitution 3.I)."""
+
 from __future__ import annotations
 
 from typing import Any

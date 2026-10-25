@@ -3,6 +3,7 @@
 Constitution 2.I: Sole producer of launch verdicts.
 Imports NOTHING from cv/ or agent/.
 """
+
 from rule_engine.config import (
     CRITICAL_CAPACITY,
     DEFAULT_THRESHOLDS,
@@ -10,6 +11,7 @@ from rule_engine.config import (
     WARNING_CAPACITY,
     apply_confidence_floor,
 )
+from rule_engine.escalation import apply_cue_escalation
 from rule_engine.manual import (
     MANDATORY_FIELDS,
     evaluate_manual_inputs,
@@ -33,6 +35,7 @@ from rule_engine.types import (
     Measurement,
     Overlay,
     OverlayKind,
+    Reason,
     Severity,
     StepResult,
     Thresholds,
@@ -59,6 +62,7 @@ __all__ = [
     "Measurement",
     "Overlay",
     "OverlayKind",
+    "Reason",
     "STEP_MAP",
     "STEPS",
     "Severity",
@@ -67,6 +71,7 @@ __all__ = [
     "WARNING_CAPACITY",
     "Verdict",
     "apply_confidence_floor",
+    "apply_cue_escalation",
     "compute_risk_score",
     "decide_verdict",
     "evaluate_manual_inputs",

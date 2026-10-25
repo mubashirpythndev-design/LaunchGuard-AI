@@ -1,4 +1,5 @@
 """Application configuration and settings via pydantic-settings (Constitution 2.II, R8)."""
+
 from __future__ import annotations
 
 from functools import lru_cache
@@ -9,9 +10,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 from rule_engine.config import MIN_CONFIDENCE_FOR_OK
 from rule_engine.types import Severity, Thresholds
 
-MANDATED_DISCLAIMER: str = (
-    "Decision-support tool. Not a replacement for certified range safety."
-)
+MANDATED_DISCLAIMER: str = "Decision-support tool. Not a replacement for certified range safety."
 VERDICT_ATTRIBUTION: str = "Verdict computed by rules; explanation by AI"
 
 
@@ -51,11 +50,25 @@ class ThresholdsConfig(BaseModel):
         )
 
 
+_current_thresholds: ThresholdsConfig = ThresholdsConfig()
+
+
+def get_current_thresholds() -> ThresholdsConfig:
+    """Return active thresholds configuration."""
+    return _current_thresholds
+
+
+def set_current_thresholds(thresholds: ThresholdsConfig) -> None:
+    """Update active thresholds configuration."""
+    global _current_thresholds
+    _current_thresholds = thresholds
+
+
 class ConfigResponse(BaseModel):
     """Schema returned by GET /api/config."""
 
     min_confidence_for_ok: float = Field(default=MIN_CONFIDENCE_FOR_OK)
-    thresholds: ThresholdsConfig = Field(default_factory=ThresholdsConfig)
+    thresholds: ThresholdsConfig = Field(default_factory=get_current_thresholds)
     disclaimer: str = Field(default=MANDATED_DISCLAIMER)
 
 

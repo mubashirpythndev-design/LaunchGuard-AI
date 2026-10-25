@@ -3,6 +3,7 @@
 Evaluates weather inputs (wind, visibility, precipitation) and range area clearance.
 Missing mandatory inputs force a HOLD verdict.
 """
+
 from __future__ import annotations
 
 from collections.abc import Sequence
@@ -103,9 +104,7 @@ def evaluate_manual_inputs(
     # 2. Visibility
     if inputs.visibility is not None:
         vis_sev = (
-            thresholds.poor_visibility_severity
-            if inputs.visibility == "poor"
-            else Severity.OK
+            thresholds.poor_visibility_severity if inputs.visibility == "poor" else Severity.OK
         )
         findings.append(
             Finding(
@@ -152,11 +151,7 @@ def evaluate_manual_inputs(
 
     # 4. Area cleared
     if inputs.area_cleared is not None:
-        area_sev = (
-            Severity.OK
-            if inputs.area_cleared
-            else thresholds.area_not_cleared_severity
-        )
+        area_sev = Severity.OK if inputs.area_cleared else thresholds.area_not_cleared_severity
         findings.append(
             Finding(
                 module="rule_engine.manual",

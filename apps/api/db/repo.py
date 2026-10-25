@@ -1,4 +1,5 @@
 """Data access layer for LaunchGuard AI (Constitution 3.V, data-model.md)."""
+
 from __future__ import annotations
 
 from collections.abc import Sequence
@@ -6,7 +7,9 @@ from datetime import UTC, datetime
 from typing import Any
 
 from sqlalchemy import func, select
+from sqlalchemy.dialects.sqlite import insert as sqlite_insert
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 from db.models import (
     ChecklistStepModel,
@@ -16,6 +19,8 @@ from db.models import (
     ManualInputModel,
     NarrativeStatus,
     ReportModel,
+    RocketModel,
+    RocketReferenceModel,
     RunEventModel,
     RunMode,
     RunModel,
@@ -30,6 +35,64 @@ def utc_now() -> datetime:
     return datetime.now(UTC)
 
 
+async def recover_completed_report(session: AsyncSession, run_id: str) -> ReportModel | None:
+    """Repair a missing historical report from stored facts, never rerunning CV or rules.
+
+    Insert-only conflict handling protects an existing report from concurrent requests.
+    No verdict, finding, run status or risk score is changed during recovery.
+    """
+    existing = await get_report_by_run(session, run_id)
+    if existing is not None:
+        return existing
+    run = await get_run(session, run_id)
+    if (run is None or run.status != RunStatus.COMPLETED
+            or run.verdict is None or run.risk_score is None):
+        return None
+    findings = await get_findings_by_run(session, run_id)
+    steps = await get_checklist_steps(session, run_id)
+    reasons = [
+        {"check_id": f.check_id, "severity": f.severity.value,
+         "message": f.message, "confidence": f.confidence,
+         "ambiguous": f.near_threshold_note is not None}
+        for f in findings if f.severity != Severity.OK
+    ]
+    # Older single-image runs kept manual-input reasons only in their completion event.
+    events = await get_run_events(session, run_id)
+    messages = {reason["message"] for reason in reasons}
+    for event in events:
+        if event.event_type != "run.completed":
+            continue
+        recorded_reasons = event.payload_json.get("reasons", [])
+        if not isinstance(recorded_reasons, list):
+            continue
+        for reason in recorded_reasons:
+            message = reason.get("message") if isinstance(reason, dict) else reason
+            if isinstance(message, str) and message not in messages:
+                reasons.append({"check_id": "historical.recorded_reason", "severity": "warning",
+                                "message": message, "confidence": 0.0, "ambiguous": False})
+                messages.add(message)
+    if not reasons:
+        reasons = [{"check_id": "historical.report_recovered", "severity": "warning",
+                    "message": "Report recovered from stored results; no recorded reason "
+                    "was available. Original verdict retained.",
+                    "confidence": 0.0, "ambiguous": False}]
+    await session.execute(sqlite_insert(ReportModel).values(
+        run_id=run_id, verdict=run.verdict, risk_score=run.risk_score,
+        reasons_json=reasons,
+        checklist_json=[{"position": step.position, "step_key": step.step_key,
+                         "label": step.step_key.replace("_", " ").title(),
+                         "status": step.status.value,
+                         "finding_count": sum(f.step_position == step.position for f in findings)}
+                        for step in steps],
+        recommended_actions_json=[],
+        disclaimer="Decision-support tool. Not a replacement for certified range safety.",
+        narrative_status=NarrativeStatus.UNAVAILABLE,
+        annotated_ref=f"/api/runs/{run_id}/annotated.png" if run.source_ref else None,
+    ).on_conflict_do_nothing(index_elements=["run_id"]))
+    await session.commit()
+    return await get_report_by_run(session, run_id)
+
+
 # --- Run Operations ---
 
 
@@ -42,12 +105,14 @@ async def create_run(
     frame_width: int | None = None,
     frame_height: int | None = None,
     run_id: str | None = None,
+    rocket_id: str | None = None,
 ) -> RunModel:
     """Create a new run entity."""
     run = RunModel(
         mode=mode,
         source_type=source_type,
         source_ref=source_ref,
+        rocket_id=rocket_id,
         thresholds_json=thresholds_json or {},
         frame_width=frame_width,
         frame_height=frame_height,
@@ -68,18 +133,29 @@ async def get_run(session: AsyncSession, run_id: str) -> RunModel | None:
 
 async def list_runs(
     session: AsyncSession,
+    verdict: Verdict | None = None,
     limit: int = 50,
     offset: int = 0,
 ) -> Sequence[RunModel]:
-    """List runs ordered by creation time descending."""
-    stmt = (
-        select(RunModel)
-        .order_by(RunModel.created_at.desc())
-        .limit(limit)
-        .offset(offset)
-    )
+    """List runs ordered by creation time descending, optionally filtered by verdict."""
+    stmt = select(RunModel)
+    if verdict is not None:
+        stmt = stmt.where(RunModel.verdict == verdict)
+    stmt = stmt.order_by(RunModel.created_at.desc()).limit(limit).offset(offset)
     result = await session.execute(stmt)
     return result.scalars().all()
+
+
+async def count_runs(
+    session: AsyncSession,
+    verdict: Verdict | None = None,
+) -> int:
+    """Count total runs, optionally filtered by verdict."""
+    stmt = select(func.count(RunModel.id))
+    if verdict is not None:
+        stmt = stmt.where(RunModel.verdict == verdict)
+    result = await session.execute(stmt)
+    return (result.scalar() or 0)
 
 
 async def update_run(
@@ -166,20 +242,17 @@ async def append_finding(
         degraded=finding.degraded,
         low_confidence_critical=finding.low_confidence_critical,
         near_threshold_note=finding.near_threshold_note,
+        quadrant=finding.quadrant,
     )
     session.add(finding_record)
     await session.flush()
     return finding_record
 
 
-async def get_findings_by_run(
-    session: AsyncSession, run_id: str
-) -> Sequence[FindingModel]:
+async def get_findings_by_run(session: AsyncSession, run_id: str) -> Sequence[FindingModel]:
     """Get all findings associated with a run ordered by sequence."""
     stmt = (
-        select(FindingModel)
-        .where(FindingModel.run_id == run_id)
-        .order_by(FindingModel.seq.asc())
+        select(FindingModel).where(FindingModel.run_id == run_id).order_by(FindingModel.seq.asc())
     )
     result = await session.execute(stmt)
     return result.scalars().all()
@@ -220,9 +293,7 @@ async def upsert_danger_zone(
     return zone
 
 
-async def get_danger_zone(
-    session: AsyncSession, run_id: str
-) -> DangerZoneModel | None:
+async def get_danger_zone(session: AsyncSession, run_id: str) -> DangerZoneModel | None:
     """Get danger zone defined for a run."""
     stmt = select(DangerZoneModel).where(DangerZoneModel.run_id == run_id)
     return (await session.execute(stmt)).scalar_one_or_none()
@@ -287,9 +358,47 @@ async def upsert_checklist_step(
     return step
 
 
-async def get_checklist_steps(
-    session: AsyncSession, run_id: str
-) -> Sequence[ChecklistStepModel]:
+async def init_checklist_steps(session: AsyncSession, run_id: str) -> list[ChecklistStepModel]:
+    """Initialize all 5 default checklist steps for a new run."""
+    steps = [
+        (1, "body"),
+        (2, "fins"),
+        (3, "launchpad_area"),
+        (4, "weather_manual"),
+        (5, "decision"),
+    ]
+    created: list[ChecklistStepModel] = []
+    for pos, key in steps:
+        step = await upsert_checklist_step(
+            session=session,
+            run_id=run_id,
+            position=pos,
+            step_key=key,
+            status=StepStatus.PENDING,
+        )
+        created.append(step)
+    return created
+
+
+async def update_checklist_step(
+    session: AsyncSession,
+    run_id: str,
+    position: int,
+    status: StepStatus,
+) -> ChecklistStepModel | None:
+    """Update status of an existing checklist step."""
+    stmt = select(ChecklistStepModel).where(
+        ChecklistStepModel.run_id == run_id,
+        ChecklistStepModel.position == position,
+    )
+    step = (await session.execute(stmt)).scalar_one_or_none()
+    if step:
+        step.status = status
+        await session.flush()
+    return step
+
+
+async def get_checklist_steps(session: AsyncSession, run_id: str) -> Sequence[ChecklistStepModel]:
     """Get all checklist steps for a run ordered by position."""
     stmt = (
         select(ChecklistStepModel)
@@ -334,9 +443,7 @@ async def upsert_manual_input(
     return item
 
 
-async def get_manual_inputs(
-    session: AsyncSession, run_id: str
-) -> Sequence[ManualInputModel]:
+async def get_manual_inputs(session: AsyncSession, run_id: str) -> Sequence[ManualInputModel]:
     """Retrieve all manual inputs submitted for a run."""
     stmt = select(ManualInputModel).where(ManualInputModel.run_id == run_id)
     result = await session.execute(stmt)
@@ -444,17 +551,13 @@ async def upsert_report(
     return report
 
 
-async def get_report_by_run(
-    session: AsyncSession, run_id: str
-) -> ReportModel | None:
+async def get_report_by_run(session: AsyncSession, run_id: str) -> ReportModel | None:
     """Get report for a run."""
     stmt = select(ReportModel).where(ReportModel.run_id == run_id)
     return (await session.execute(stmt)).scalar_one_or_none()
 
 
-async def get_report_by_share_token(
-    session: AsyncSession, share_token: str
-) -> ReportModel | None:
+async def get_report_by_share_token(session: AsyncSession, share_token: str) -> ReportModel | None:
     """Get report by public share token."""
     stmt = select(ReportModel).where(ReportModel.share_token == share_token)
     return (await session.execute(stmt)).scalar_one_or_none()
@@ -463,9 +566,7 @@ async def get_report_by_share_token(
 # --- Demo Scenario Operations ---
 
 
-async def get_demo_scenario(
-    session: AsyncSession, key: str
-) -> DemoScenarioModel | None:
+async def get_demo_scenario(session: AsyncSession, key: str) -> DemoScenarioModel | None:
     """Get a demo scenario by key."""
     return await session.get(DemoScenarioModel, key)
 
@@ -537,3 +638,131 @@ async def seed_demo_scenarios(session: AsyncSession) -> None:
             session.add(demo)
 
     await session.flush()
+
+
+# --- Rocket Profile & Reference Operations ---
+
+
+async def create_rocket(
+    session: AsyncSession,
+    name: str,
+    vehicle_class: str,
+    notes: str | None = None,
+    rocket_id: str | None = None,
+) -> RocketModel:
+    """Create a new rocket vehicle profile."""
+    rocket = RocketModel(
+        name=name,
+        vehicle_class=vehicle_class,
+        notes=notes,
+    )
+    if rocket_id:
+        rocket.id = rocket_id
+    session.add(rocket)
+    await session.flush()
+    return rocket
+
+
+async def get_rocket(session: AsyncSession, rocket_id: str) -> RocketModel | None:
+    """Retrieve rocket vehicle by primary key with loaded references."""
+    stmt = (
+        select(RocketModel)
+        .where(RocketModel.id == rocket_id)
+        .options(selectinload(RocketModel.references))
+    )
+    res = await session.execute(stmt)
+    return res.scalar_one_or_none()
+
+
+async def list_rockets(
+    session: AsyncSession,
+    limit: int = 50,
+    offset: int = 0,
+) -> Sequence[RocketModel]:
+    """Retrieve paginated list of rocket profiles ordered by creation time descending."""
+    stmt = (
+        select(RocketModel)
+        .options(selectinload(RocketModel.references))
+        .order_by(RocketModel.created_at.desc())
+        .limit(limit)
+        .offset(offset)
+    )
+    res = await session.execute(stmt)
+    return res.scalars().all()
+
+
+async def count_rockets(session: AsyncSession) -> int:
+    """Return total count of rocket profiles."""
+    stmt = select(func.count(RocketModel.id))
+    res = await session.execute(stmt)
+    return res.scalar_one()
+
+
+async def delete_rocket(session: AsyncSession, rocket_id: str) -> bool:
+    """Delete a rocket profile and cascaded references."""
+    rocket = await session.get(RocketModel, rocket_id)
+    if not rocket:
+        return False
+    await session.delete(rocket)
+    await session.flush()
+    return True
+
+
+async def upsert_rocket_reference(
+    session: AsyncSession,
+    rocket_id: str,
+    quadrant: str,
+    image_path: str,
+    keypoint_count: int = 0,
+) -> RocketReferenceModel:
+    """Insert or update a baseline golden reference for a vehicle quadrant."""
+    stmt = select(RocketReferenceModel).where(
+        RocketReferenceModel.rocket_id == rocket_id,
+        RocketReferenceModel.quadrant == quadrant,
+    )
+    res = await session.execute(stmt)
+    ref = res.scalar_one_or_none()
+
+    if ref:
+        ref.image_path = image_path
+        ref.keypoint_count = keypoint_count
+        ref.created_at = utc_now()
+    else:
+        ref = RocketReferenceModel(
+            rocket_id=rocket_id,
+            quadrant=quadrant,
+            image_path=image_path,
+            keypoint_count=keypoint_count,
+        )
+        session.add(ref)
+
+    await session.flush()
+    return ref
+
+
+async def get_rocket_references(
+    session: AsyncSession,
+    rocket_id: str,
+) -> Sequence[RocketReferenceModel]:
+    """Retrieve all golden references for a rocket profile."""
+    stmt = (
+        select(RocketReferenceModel)
+        .where(RocketReferenceModel.rocket_id == rocket_id)
+        .order_by(RocketReferenceModel.quadrant.asc())
+    )
+    res = await session.execute(stmt)
+    return res.scalars().all()
+
+
+async def get_rocket_reference_by_quadrant(
+    session: AsyncSession,
+    rocket_id: str,
+    quadrant: str,
+) -> RocketReferenceModel | None:
+    """Retrieve reference image for a specific rocket quadrant."""
+    stmt = select(RocketReferenceModel).where(
+        RocketReferenceModel.rocket_id == rocket_id,
+        RocketReferenceModel.quadrant == quadrant,
+    )
+    res = await session.execute(stmt)
+    return res.scalar_one_or_none()

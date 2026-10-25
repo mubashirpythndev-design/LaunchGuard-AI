@@ -85,10 +85,10 @@ def generate_fixtures() -> None:
     draw_rocket_body(img_normal)
     draw_fins(img_normal, left_angle_deg=45.0, right_angle_deg=45.0)
 
-    # 2. Misaligned Fin (HOLD) - Fin angle deviation 7.2 deg
+    # 2. Misaligned fin: asymmetric projected leading edges, measured by CV.
     img_fin = create_base_scene()
     draw_rocket_body(img_fin)
-    draw_fins(img_fin, left_angle_deg=41.0, right_angle_deg=48.2)
+    draw_fins(img_fin, left_angle_deg=40.0, right_angle_deg=55.0)
 
     # 3. Person in Zone (NO-GO) - Person at launchpad base
     img_person = create_base_scene()
@@ -109,10 +109,42 @@ def generate_fixtures() -> None:
         cv2.imwrite(str(api_path), img)
         print(f"Generated {name} -> {web_path} and {api_path}")
 
+    # Create crack defect image
+    img_crack = create_base_scene()
+    draw_rocket_body(img_crack)
+    draw_fins(img_crack, left_angle_deg=45.0, right_angle_deg=45.0)
+    # Draw visible jagged surface crack on rocket fuselage
+    cv2.line(img_crack, (388, 290), (405, 320), (30, 30, 30), 2)
+    cv2.line(img_crack, (405, 320), (398, 335), (30, 30, 30), 2)
+    cv2.line(img_crack, (398, 335), (412, 355), (30, 30, 30), 2)
+    cv2.line(img_crack, (405, 320), (418, 325), (40, 40, 40), 1)
+
+    # Golden-reference demo pair: the checkerboard livery exists in both images,
+    # while the current image contains a newly introduced, measurable fracture.
+    img_reference = img_normal.copy()
+    cv2.rectangle(img_reference, (374, 245), (398, 269), (28, 28, 28), -1)
+    cv2.rectangle(img_reference, (399, 270), (426, 294), (28, 28, 28), -1)
+    img_reference_cracked = img_reference.copy()
+    cv2.line(img_reference_cracked, (382, 205), (420, 375), (8, 8, 8), 13)
+    # Deliberately large synthetic damage: area severity is measured over the
+    # overlapping frame, not a segmented airframe mask or a physical crack width.
+    cv2.circle(img_reference_cracked, (407, 330), 75, (12, 12, 12), -1)
+
+    reference_scenarios = {
+        "rocket_reference_front.jpg": img_reference,
+        "rocket_current_damaged.jpg": img_reference_cracked,
+        "rocket_golden_reference.jpg": img_reference,
+        "rocket_current_intact.jpg": img_reference,
+        "rocket_current_cracked.jpg": img_reference_cracked,
+    }
+    for name, img in reference_scenarios.items():
+        cv2.imwrite(str(API_FIXTURES / name), img)
+        cv2.imwrite(str(WEB_DEMO / name), img)
+
     # Create check_id pass/fail copies per R14
     pairs = [
         ("body.cracks__pass.jpg", img_normal),
-        ("body.cracks__fail.jpg", img_fin),
+        ("body.cracks__fail.jpg", img_crack),
         ("fin.alignment__pass.jpg", img_normal),
         ("fin.alignment__fail.jpg", img_fin),
         ("zone.occupancy__pass.jpg", img_normal),
@@ -131,10 +163,21 @@ These test images are synthetically generated for LaunchGuard AI to provide repr
 | File | Scenario | Purpose | Expected Verdict |
 |---|---|---|---|
 | `normal.jpg` | Normal flight vehicle | Symmetrical fins, clear pad | **GO** |
-| `fin_misaligned.jpg` | Asymmetrical fin mount | 7.2 deg fin deviation (>6 deg crit / >3 deg warn) | **HOLD** |
+| `fin_misaligned.jpg` | Asymmetrical fin mount | Measured leading-edge asymmetry (>3 deg warn / <=6 deg crit) | **HOLD** |
 | `person_in_zone.jpg` | Pad safety breach | Technician detected within danger exclusion zone | **NO-GO** |
+| `rocket_reference_front.jpg` | Golden baseline | Stored livery and pristine body surface | Reference |
+| `rocket_current_damaged.jpg` | Reference deviation | Same livery with a new fracture | **NO-GO** |
+| `rocket_golden_reference.jpg` | Golden baseline | Alias of rocket_reference_front.jpg | Reference |
+| `rocket_current_intact.jpg` | Unchanged surface | Same baseline and existing livery | Reference check OK |
+| `rocket_current_cracked.jpg` | New surface damage | Alias of rocket_current_damaged.jpg | Reference check critical |
 
 Generated programmatically by `scripts/generate_fixtures.py`.
+
+These are synthetic 800x600 illustrations, not certified hardware photographs.
+The reference aliases are byte-identical in the API fixtures and web demo folder.
+Reference check OK is not a GO verdict: mandatory manual inputs and every other
+finding still participate in the deterministic decision. Four copies of this
+single-view illustration demonstrate quadrant routing, not physical 360-degree coverage.
 """
     with open(API_FIXTURES / "SOURCES.md", "w", encoding="utf-8") as f:
         f.write(sources_content)

@@ -1,4 +1,5 @@
 """Stable check registry and step mapping for LaunchGuard AI (Constitution 2.III, Research R6)."""
+
 from __future__ import annotations
 
 from typing import Final
@@ -12,9 +13,7 @@ STEPS: Final[list[dict[str, str | int]]] = [
     {"position": 5, "step_key": "decision", "label": "Generate decision"},
 ]
 
-STEP_MAP: Final[dict[int, dict[str, str | int]]] = {
-    int(s["position"]): s for s in STEPS
-}
+STEP_MAP: Final[dict[int, dict[str, str | int]]] = {int(s["position"]): s for s in STEPS}
 
 # 15 Stable Check IDs mapped to their step position
 CHECK_TO_STEP: Final[dict[str, int]] = {

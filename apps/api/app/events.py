@@ -2,6 +2,7 @@
 
 Constitution 3.IV, Research R5, contracts/events.md.
 """
+
 from __future__ import annotations
 
 import asyncio
@@ -109,27 +110,23 @@ async def stream_run_events(
     heartbeat_interval: float = 15.0,
 ) -> AsyncGenerator[str, None]:
     """Generate Server-Sent Events stream with DB replay and live pub/sub attachment."""
-    # 1. Replay historical events from DB strictly greater than last_event_id
+    # Subscribe before replay so events committed during replay cannot fall into a gap.
     replayed_max_seq = last_event_id
-    async with async_session_factory() as session:
-        records = await get_run_events(session, run_id, after_seq=last_event_id)
-        for record in records:
-            msg = EventMessage(
-                seq=record.seq,
-                event_type=record.event_type,
-                payload=record.payload_json,
-                at=record.created_at.isoformat().replace("+00:00", "Z"),
-            )
-            yield msg.to_sse_frame()
-            if record.seq > replayed_max_seq:
-                replayed_max_seq = record.seq
-
-    # 2. Attach live subscriber queue
     queue = await broadcaster.subscribe(run_id)
-    terminal_reached = False
-
     try:
-        while not terminal_reached:
+        async with async_session_factory() as session:
+            records = await get_run_events(session, run_id, after_seq=last_event_id)
+            for record in records:
+                msg = EventMessage(
+                    seq=record.seq,
+                    event_type=record.event_type,
+                    payload=record.payload_json,
+                    at=record.created_at.isoformat().replace("+00:00", "Z"),
+                )
+                yield msg.to_sse_frame()
+                replayed_max_seq = max(replayed_max_seq, record.seq)
+
+        while True:
             try:
                 msg = await asyncio.wait_for(queue.get(), timeout=heartbeat_interval)
                 # Deduplication: discard any message already yielded via replay
@@ -140,7 +137,7 @@ async def stream_run_events(
                 yield msg.to_sse_frame()
 
                 if msg.event_type in ("report.narrative_ready", "run.failed"):
-                    terminal_reached = True
+                    return
             except TimeoutError:
                 # 15-second heartbeat to prevent idle connection termination
                 yield ":heartbeat\n\n"

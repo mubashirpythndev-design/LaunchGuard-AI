@@ -1,4 +1,5 @@
 """Unit tests for SSE event broadcasting, DB persistence, fan-out, and reconnection (T047)."""
+
 from __future__ import annotations
 
 import asyncio

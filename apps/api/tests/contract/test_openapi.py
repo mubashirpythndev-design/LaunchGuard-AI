@@ -4,6 +4,7 @@ Asserts that:
 1. Every declared API route under /api has an explicit response model or documented response.
 2. The exported OpenAPI document has valid info, paths, and components without bare un-typed shapes.
 """
+
 from __future__ import annotations
 
 from fastapi.routing import APIRoute
@@ -38,6 +39,7 @@ def test_every_api_route_has_response_contract() -> None:
             "/api/runs/{run_id}/stream",
             "/api/runs/{run_id}/image",
             "/api/runs/{run_id}/annotated.png",
+            "/api/rockets/{rocket_id}/references/{quadrant}",
         )
         if not (has_response_model or has_custom_responses or is_binary_stream):
             untyped_routes.append(f"{route.methods} {route.path}")

@@ -2,6 +2,7 @@
 
 The rule engine must NOT import anything from cv or agent.
 """
+
 import ast
 from pathlib import Path
 

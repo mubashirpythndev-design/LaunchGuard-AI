@@ -6,6 +6,7 @@ Bands:
   HOLD  -> 40–69
   NO-GO -> 70–100
 """
+
 from __future__ import annotations
 
 from collections.abc import Sequence
@@ -16,9 +17,7 @@ from rule_engine.types import Finding, Severity, Verdict
 
 def compute_risk_score(findings: Sequence[Finding], verdict: Verdict) -> int:
     """Compute verdict-banded saturating risk score."""
-    warning_evidence = sum(
-        0.25 * f.confidence for f in findings if f.severity == Severity.WARNING
-    )
+    warning_evidence = sum(0.25 * f.confidence for f in findings if f.severity == Severity.WARNING)
     critical_evidence = sum(
         1.00 * f.confidence for f in findings if f.severity == Severity.CRITICAL
     )

@@ -157,32 +157,32 @@ Assert no outbound network call occurs.
 
 ### Tests for User Story 1 (REQUIRED by Constitution 5.II)
 
-- [ ] T052 [P] [US1] Pytest fixture test for `cv/body.py` in `apps/api/tests/unit/test_cv_body.py` — a `__pass` and a `__fail` image, asserting cracks, dents, damage, and burn marks
-- [ ] T053 [P] [US1] Pytest fixture test for `cv/fins.py` in `apps/api/tests/unit/test_cv_fins.py` — `__pass` within 1.5° of known → `ok`; `__fail` → `warning` or `critical`; boundaries at exactly 3° and 6° fall on the less-severe side
-- [ ] T054 [P] [US1] Pytest fail-safe test in `apps/api/tests/unit/test_failsafe.py` — a module forced to raise and a module forced to time out both yield `severity="warning"` at `confidence=0.0` with `degraded=true`, never `ok`
-- [ ] T055 [P] [US1] Pytest contract test in `apps/api/tests/contract/test_inspections.py` — `POST /api/inspections` returns `201` with a run handle; oversize, wrong-type, and corrupt uploads each return their specific code and create no run
-- [ ] T056 [P] [US1] Vitest + RTL for the uploader in `apps/web/tests/uploader.test.tsx` — drag-drop and file-picker both validate type and size, and the preview renders before the request resolves
-- [ ] T057 [P] [US1] Vitest + RTL for `AnnotatedViewer` in `apps/web/tests/annotated-viewer.test.tsx` — per-module overlay toggles, and normalized coordinates re-render at a different display size
-- [ ] T058 [US1] Playwright e2e in `e2e/inspection.spec.ts` — upload `fin_misaligned.jpg`, assert a `warning` finding shows the deviation in degrees and the disclaimer is visible
+- [x] T052 [P] [US1] Pytest fixture test for `cv/body.py` in `apps/api/tests/unit/test_cv_body.py` — a `__pass` and a `__fail` image, asserting cracks, dents, damage, and burn marks
+- [x] T053 [P] [US1] Pytest fixture test for `cv/fins.py` in `apps/api/tests/unit/test_cv_fins.py` — `__pass` within 1.5° of known → `ok`; `__fail` → `warning` or `critical`; boundaries at exactly 3° and 6° fall on the less-severe side
+- [x] T054 [P] [US1] Pytest fail-safe test in `apps/api/tests/unit/test_failsafe.py` — a module forced to raise and a module forced to time out both yield `severity="warning"` at `confidence=0.0` with `degraded=true`, never `ok`
+- [x] T055 [P] [US1] Pytest contract test in `apps/api/tests/contract/test_inspections.py` — `POST /api/inspections` returns `201` with a run handle; oversize, wrong-type, and corrupt uploads each return their specific code and create no run
+- [x] T056 [P] [US1] Vitest + RTL for the uploader in `apps/web/tests/uploader.test.tsx` — drag-drop and file-picker both validate type and size, and the preview renders before the request resolves
+- [x] T057 [P] [US1] Vitest + RTL for `AnnotatedViewer` in `apps/web/tests/annotated-viewer.test.tsx` — per-module overlay toggles, and normalized coordinates re-render at a different display size
+- [x] T058 [US1] Playwright e2e in `e2e/inspection.spec.ts` — upload `fin_misaligned.jpg`, assert a `warning` finding shows the deviation in degrees and the disclaimer is visible
 
 ### Implementation for User Story 1
 
-- [ ] T059 [P] [US1] Create `apps/api/cv/frameio.py` — decode and validate an image, returning low confidence for uniform, too-dark, or too-bright frames rather than raising
-- [ ] T060 [P] [US1] Create `apps/api/cv/models.py` — the YOLOv8n lazy singleton holding **weights only**, guarded by a lock, with `predict()` taking a fresh `ndarray` and storing nothing per request
-- [ ] T061 [US1] Create `apps/api/cv/body.py` as pure `(input) -> list[Finding]` covering cracks, dents, surface damage, and burn marks
-- [ ] T062 [US1] Create `apps/api/cv/fins.py` as a pure function computing fin angle deviation with `error_margin = 1.5` and an `arc` overlay
-- [ ] T063 [US1] Create `apps/api/cv/annotate.py` producing normalized `Overlay` JSON and a server-rendered annotated JPEG
-- [ ] T064 [US1] Create `apps/api/cv/failsafe.py` — the fail-safe decorator wrapping every CV entry point so an exception or timeout becomes `severity="warning"` with a hedged message naming the module
-- [ ] T065 [US1] Create `apps/api/agent/tools.py` with typed pure tool wrappers — `inspect_body`, `check_fin_alignment`, `check_launchpad_clear` — each returning `list[Finding]`
-- [ ] T066 [US1] Create `apps/api/app/routers/inspections.py` with `POST /api/inspections` and `GET /api/runs/{run_id}`, validating type, size, and decodability before a run is created
-- [ ] T067 [US1] Create `apps/api/app/routers/config.py` serving `GET /api/config` with the thresholds, `min_confidence_for_ok`, and the disclaimer
-- [ ] T068 [US1] Run `pnpm generate` to regenerate `packages/contract` from the updated OpenAPI document
-- [ ] T069 [US1] Create `apps/web/components/inspection/Uploader.tsx` — a client component with drag-drop, inline validation via React Hook Form + Zod, and an immediate local object-URL preview
-- [ ] T070 [US1] Create `apps/web/components/inspection/AnnotatedViewer.tsx` drawing normalized overlays as SVG with per-module toggles
-- [ ] T071 [US1] Create `apps/web/components/inspection/FindingList.tsx` and `FindingCard.tsx` on a plain shadcn `Card` — **no React Bits on a finding card**, since the finding list is a decision-critical surface
-- [ ] T072 [US1] Create `apps/web/app/inspect/page.tsx` composing the uploader, the viewer, the module toggles, and the findings list, with `VerdictBadge`, `RiskGauge`, and `Disclaimer`
-- [ ] T073 [P] [US1] Add a Pytest order-independence test in `apps/api/tests/unit/test_detector_purity.py` — detecting fixture A then fixture B in one process yields a result for B byte-identical to a fresh process's result for B
-- [ ] T074 [P] [US1] Add a Pytest performance test in `apps/api/tests/unit/test_latency.py` — a full single-image inspection reaches a fixed verdict in under 5 s, and a `GET /api/config` round-trip reflects a changed threshold
+- [x] T059 [P] [US1] Create `apps/api/cv/frameio.py` — decode and validate an image, returning low confidence for uniform, too-dark, or too-bright frames rather than raising
+- [x] T060 [P] [US1] Create `apps/api/cv/models.py` — the YOLOv8n lazy singleton holding **weights only**, guarded by a lock, with `predict()` taking a fresh `ndarray` and storing nothing per request
+- [x] T061 [US1] Create `apps/api/cv/body.py` as pure `(input) -> list[Finding]` covering cracks, dents, surface damage, and burn marks
+- [x] T062 [US1] Create `apps/api/cv/fins.py` as a pure function computing fin angle deviation with `error_margin = 1.5` and an `arc` overlay
+- [x] T063 [US1] Create `apps/api/cv/annotate.py` producing normalized `Overlay` JSON and a server-rendered annotated JPEG
+- [x] T064 [US1] Create `apps/api/cv/failsafe.py` — the fail-safe decorator wrapping every CV entry point so an exception or timeout becomes `severity="warning"` with a hedged message naming the module
+- [x] T065 [US1] Create `apps/api/agent/tools.py` with typed pure tool wrappers — `inspect_body`, `check_fin_alignment`, `check_launchpad_clear` — each returning `list[Finding]`
+- [x] T066 [US1] Create `apps/api/app/routers/inspections.py` with `POST /api/inspections` and `GET /api/runs/{run_id}`, validating type, size, and decodability before a run is created
+- [x] T067 [US1] Create `apps/api/app/routers/config.py` serving `GET /api/config` with the thresholds, `min_confidence_for_ok`, and the disclaimer
+- [x] T068 [US1] Run `pnpm generate` to regenerate `packages/contract` from the updated OpenAPI document
+- [x] T069 [US1] Create `apps/web/components/inspection/Uploader.tsx` — a client component with drag-drop, inline validation via React Hook Form + Zod, and an immediate local object-URL preview
+- [x] T070 [US1] Create `apps/web/components/inspection/AnnotatedViewer.tsx` drawing normalized overlays as SVG with per-module toggles
+- [x] T071 [US1] Create `apps/web/components/inspection/FindingList.tsx` and `FindingCard.tsx` on a plain shadcn `Card` — **no React Bits on a finding card**, since the finding list is a decision-critical surface
+- [x] T072 [US1] Create `apps/web/app/inspect/page.tsx` composing the uploader, the viewer, the module toggles, and the findings list, with `VerdictBadge`, `RiskGauge`, and `Disclaimer`
+- [x] T073 [P] [US1] Add a Pytest order-independence test in `apps/api/tests/unit/test_detector_purity.py` — detecting fixture A then fixture B in one process yields a result for B byte-identical to a fresh process's result for B
+- [x] T074 [P] [US1] Add a Pytest performance test in `apps/api/tests/unit/test_latency.py` — a full single-image inspection reaches a fixed verdict in under 5 s, and a `GET /api/config` round-trip reflects a changed threshold
 
 **Checkpoint**: User Story 1 is fully functional and independently testable. This is the MVP.
 
@@ -199,27 +199,27 @@ persists the zone with the run. No language model required.
 
 ### Tests for User Story 2
 
-- [ ] T075 [P] [US2] Pytest unit test for `cv/zone.py` in `apps/api/tests/unit/test_cv_zone.py` — inside, outside, and edge overlap, with the containment rule (any overlap counts as inside) asserted
-- [ ] T076 [P] [US2] Pytest unit test for zone validation in `apps/api/tests/unit/test_zone_validation.py` — a polygon with fewer than three points, a self-intersecting outline, and a zero-area polygon are each rejected with a message naming the problem
-- [ ] T077 [P] [US2] Pytest contract test in `apps/api/tests/contract/test_monitor.py` — `POST /api/monitor/{run_id}/frame` with a raw JPEG body returns findings and `zone_status`; a frame before a zone returns `409`; the response includes `processing_ms`
-- [ ] T078 [P] [US2] Pytest latency test in `apps/api/tests/unit/test_monitor_latency.py` — a monitored frame is processed server-side in under 500 ms
-- [ ] T079 [P] [US2] Vitest + RTL for `ZoneEditor` in `apps/web/tests/zone-editor.test.tsx` — drawing, editing, and deleting a polygon, and normalized points round-tripping through the Zustand store
-- [ ] T080 [P] [US2] Vitest + RTL for the live banner in `apps/web/tests/live-banner.test.tsx` — `CLEAR` / `WARNING` / `DANGER` each render text and an icon, and remain legible with reduced motion and with colour perception differences simulated
-- [ ] T081 [US2] Playwright e2e in `e2e/monitor-webcam.spec.ts` — using Chromium's `--use-file-for-fake-video-capture`, a person entering the zone shows `DANGER` within 1 second
+- [x] T075 [P] [US2] Pytest unit test for `cv/zone.py` in `apps/api/tests/unit/test_cv_zone.py` — inside, outside, and edge overlap, with the containment rule (any overlap counts as inside) asserted
+- [x] T076 [P] [US2] Pytest unit test for zone validation in `apps/api/tests/unit/test_zone_validation.py` — a polygon with fewer than three points, a self-intersecting outline, and a zero-area polygon are each rejected with a message naming the problem
+- [x] T077 [P] [US2] Pytest contract test in `apps/api/tests/contract/test_monitor.py` — `POST /api/monitor/{run_id}/frame` with a raw JPEG body returns findings and `zone_status`; a frame before a zone returns `409`; the response includes `processing_ms`
+- [x] T078 [P] [US2] Pytest latency test in `apps/api/tests/unit/test_monitor_latency.py` — a monitored frame is processed server-side in under 500 ms
+- [x] T079 [P] [US2] Vitest + RTL for `ZoneEditor` in `apps/web/tests/zone-editor.test.tsx` — drawing, editing, and deleting a polygon, and normalized points round-tripping through the Zustand store
+- [x] T080 [P] [US2] Vitest + RTL for the live banner in `apps/web/tests/live-banner.test.tsx` — `CLEAR` / `WARNING` / `DANGER` each render text and an icon, and remain legible with reduced motion and with colour perception differences simulated
+- [x] T081 [US2] Playwright e2e in `e2e/monitor-webcam.spec.ts` — using Chromium's `--use-file-for-fake-video-capture`, a person entering the zone shows `DANGER` within 1 second
 
 ### Implementation for User Story 2
 
-- [ ] T082 [US2] Create `apps/api/cv/zone.py` as a pure function testing normalized bounding regions against a normalized polygon with `cv.pointPolygonTest`
-- [ ] T083 [US2] Create `apps/api/app/routers/monitor.py` with `POST /api/monitor`, `POST /api/monitor/{run_id}/frame` (raw JPEG in, findings plus `zone_status` out, **no agent on this fast path**), `PUT` and `DELETE /api/monitor/{run_id}/zone`, and `GET /api/monitor/{run_id}/log`
-- [ ] T084 [US2] Create `apps/web/stores/monitor-store.ts` — the only Zustand store in the app, holding zone points, source selection, and live status
-- [ ] T085 [US2] Create `apps/web/components/monitor/ZoneEditor.tsx` — a canvas polygon editor storing normalized points, with the malformed-polygon messages from T076 surfaced
-- [ ] T086 [US2] Create `apps/web/hooks/use-webcam.ts` — `getUserMedia`, offscreen-canvas capture, `toBlob('image/jpeg')`, **single frame in flight** (skip the capture while a request is outstanding), and a disconnected state that marks the last status as stale
-- [ ] T087 [US2] Create `apps/web/components/monitor/SourceSelector.tsx` using shadcn `Tabs` for image, video file, and webcam
-- [ ] T088 [US2] Create `apps/web/components/monitor/LiveStatusBanner.tsx` — `CLEAR` / `WARNING` / `DANGER` with text, icon, and colour, an `aria-live` region, and an `AnimatedList` detection log restricted to **status transitions**, not to severity-bearing finding detail
-- [ ] T089 [US2] Create `apps/web/app/monitor/page.tsx` composing the source selector, the zone editor, the live monitor, the banner, and the detection log, with `Disclaimer`
-- [ ] T090 [US2] Run `pnpm generate` to regenerate `packages/contract`
-- [ ] T091 [P] [US2] Add a Pytest test in `apps/api/tests/unit/test_zone_reload.py` — a saved zone re-renders in the same position for a frame of a different size, using the stored `source_width` / `source_height`
-- [ ] T092 [P] [US2] Add a Pytest test in `apps/api/tests/unit/test_two_tabs.py` — two concurrent SSE subscribers on one run stay consistent and neither corrupts the run
+- [x] T082 [US2] Create `apps/api/cv/zone.py` as a pure function testing normalized bounding regions against a normalized polygon with `cv.pointPolygonTest`
+- [x] T083 [US2] Create `apps/api/app/routers/monitor.py` with `POST /api/monitor`, `POST /api/monitor/{run_id}/frame` (raw JPEG in, findings plus `zone_status` out, **no agent on this fast path**), `PUT` and `DELETE /api/monitor/{run_id}/zone`, and `GET /api/monitor/{run_id}/log`
+- [x] T084 [US2] Create `apps/web/stores/monitor-store.ts` — the only Zustand store in the app, holding zone points, source selection, and live status
+- [x] T085 [US2] Create `apps/web/components/monitor/ZoneEditor.tsx` — a canvas polygon editor storing normalized points, with the malformed-polygon messages from T076 surfaced
+- [x] T086 [US2] Create `apps/web/hooks/use-webcam.ts` — `getUserMedia`, offscreen-canvas capture, `toBlob('image/jpeg')`, **single frame in flight** (skip the capture while a request is outstanding), and a disconnected state that marks the last status as stale
+- [x] T087 [US2] Create `apps/web/components/monitor/SourceSelector.tsx` using shadcn `Tabs` for image, video file, and webcam
+- [x] T088 [US2] Create `apps/web/components/monitor/LiveStatusBanner.tsx` — `CLEAR` / `WARNING` / `DANGER` with text, icon, and colour, an `aria-live` region, and an `AnimatedList` detection log restricted to **status transitions**, not to severity-bearing finding detail
+- [x] T089 [US2] Create `apps/web/app/monitor/page.tsx` composing the source selector, the zone editor, the live monitor, the banner, and the detection log, with `Disclaimer`
+- [x] T090 [US2] Run `pnpm generate` to regenerate `packages/contract`
+- [x] T091 [P] [US2] Add a Pytest test in `apps/api/tests/unit/test_zone_reload.py` — a saved zone re-renders in the same position for a frame of a different size, using the stored `source_width` / `source_height`
+- [x] T092 [P] [US2] Add a Pytest test in `apps/api/tests/unit/test_two_tabs.py` — two concurrent SSE subscribers on one run stay consistent and neither corrupts the run
 
 **Checkpoint**: User Stories 1 and 2 both work independently.
 
@@ -239,15 +239,15 @@ as a body or fin finding.
 
 ### Tests for User Story 3
 
-- [ ] T093 [P] [US3] Pytest fixture test for `cv/cues.py` in `apps/api/tests/unit/test_cv_cues.py` — flame, smoke, liquid, motion, and a clean static frame, each asserting the finding shape matches every other finding type
-- [ ] T094 [P] [US3] Pytest escalation test in `apps/api/tests/unit/test_cue_escalation.py` — a liquid pool alone is `warning`; a liquid pool with a fire cue in the same run escalates to `critical`
+- [x] T093 [P] [US3] Pytest fixture test for `cv/cues.py` in `apps/api/tests/unit/test_cv_cues.py` — flame, smoke, liquid, motion, and a clean static frame, each asserting the finding shape matches every other finding type
+- [x] T094 [P] [US3] Pytest escalation test in `apps/api/tests/unit/test_cue_escalation.py` — a liquid pool alone is `warning`; a liquid pool with a fire cue in the same run escalates to `critical`
 
 ### Implementation for User Story 3
 
-- [ ] T095 [P] [US3] Create `apps/api/cv/cues.py` as pure functions — HSV segmentation for flame and smoke, frame differencing for abnormal motion, and a blob detector for liquid pooling — each returning `list[Finding]` on the shared `launchpad_area` step
-- [ ] T096 [US3] Add the four `cue.*` tool wrappers to `apps/api/agent/tools.py` and register the escalation rule
-- [ ] T097 [US3] Run `pnpm generate`, then confirm in `apps/web` that cue findings render through the existing `FindingList` with no new component
-- [ ] T098 [P] [US3] Add a Pytest test in `apps/api/tests/unit/test_cue_degraded.py` — a uniform or too-dark frame yields low confidence from the cue detectors and a `warning` note rather than a clean result
+- [x] T095 [P] [US3] Create `apps/api/cv/cues.py` as pure functions — HSV segmentation for flame and smoke, frame differencing for abnormal motion, and a blob detector for liquid pooling — each returning `list[Finding]` on the shared `launchpad_area` step
+- [x] T096 [US3] Add the four `cue.*` tool wrappers to `apps/api/agent/tools.py` and register the escalation rule
+- [x] T097 [US3] Run `pnpm generate`, then confirm in `apps/web` that cue findings render through the existing `FindingList` with no new component
+- [x] T098 [P] [US3] Add a Pytest test in `apps/api/tests/unit/test_cue_degraded.py` — a uniform or too-dark frame yields low confidence from the cue detectors and a `warning` note rather than a clean result
 
 **Checkpoint**: All six user stories are independently functional.
 
@@ -265,27 +265,27 @@ output.
 
 ### Tests for User Story 4
 
-- [ ] T099 [P] [US4] Pytest unit test for the narrative payload in `apps/api/tests/unit/test_narrative_payload.py` — the serialized payload matches a denylist of `data:image`, `base64`, image MIME types, and absolute paths, and contains no run-local image reference (FR-039, SH-009)
-- [ ] T100 [P] [US4] Pytest unit test for narrative degradation in `apps/api/tests/unit/test_narrative_fallback.py` — with the model forced to fail, the report still carries verdict, risk score, checklist, and reasons, and marks the narrative `unavailable` rather than omitting it (FR-026, SH-008)
-- [ ] T101 [P] [US4] Pytest verdict-immutability test in `apps/api/tests/unit/test_verdict_immutable.py` — the displayed verdict is byte-identical to the rule engine's independent output even with the narrative forced to fail (SH-006)
-- [ ] T102 [P] [US4] Pytest interrupt test in `apps/api/tests/unit/test_interrupt.py` — the graph pauses at step 4, `resume` with valid input completes the run, and the same `thread_id` is reused
-- [ ] T103 [P] [US4] Pytest contract test in `apps/api/tests/contract/test_runs.py` — `POST /api/runs/{run_id}/manual-inputs` rejects a negative wind speed with `400` and `field` set, and the SSE stream delivers the documented event sequence
-- [ ] T104 [P] [US4] Vitest + RTL for `ManualInputsDialog` in `apps/web/tests/manual-inputs.test.tsx` — a negative wind speed is rejected inline and does not submit
-- [ ] T105 [US4] Playwright e2e in `e2e/agentic-report.spec.ts` — a run pauses for missing inputs, the dialog submits, the run resumes, and the report renders the verdict with the disclaimer
+- [x] T099 [P] [US4] Pytest unit test for the narrative payload in `apps/api/tests/unit/test_narrative_payload.py` — the serialized payload matches a denylist of `data:image`, `base64`, image MIME types, and absolute paths, and contains no run-local image reference (FR-039, SH-009)
+- [x] T100 [P] [US4] Pytest unit test for narrative degradation in `apps/api/tests/unit/test_narrative_fallback.py` — with the model forced to fail, the report still carries verdict, risk score, checklist, and reasons, and marks the narrative `unavailable` rather than omitting it (FR-026, SH-008)
+- [x] T101 [P] [US4] Pytest verdict-immutability test in `apps/api/tests/unit/test_verdict_immutable.py` — the displayed verdict is byte-identical to the rule engine's independent output even with the narrative forced to fail (SH-006)
+- [x] T102 [P] [US4] Pytest interrupt test in `apps/api/tests/unit/test_interrupt.py` — the graph pauses at step 4, `resume` with valid input completes the run, and the same `thread_id` is reused
+- [x] T103 [P] [US4] Pytest contract test in `apps/api/tests/contract/test_runs.py` — `POST /api/runs/{run_id}/manual-inputs` rejects a negative wind speed with `400` and `field` set, and the SSE stream delivers the documented event sequence
+- [x] T104 [P] [US4] Vitest + RTL for `ManualInputsDialog` in `apps/web/tests/manual-inputs.test.tsx` — a negative wind speed is rejected inline and does not submit
+- [x] T105 [US4] Playwright e2e in `e2e/agentic-report.spec.ts` — a run pauses for missing inputs, the dialog submits, the run resumes, and the report renders the verdict with the disclaimer
 
 ### Implementation for User Story 4
 
-- [ ] T106 [P] [US4] Create `apps/api/agent/state.py` with the `GraphState` `TypedDict`
-- [ ] T107 [US4] Create `apps/api/agent/graph.py` — the `StateGraph` with the five ordered steps, **`interrupt()` as the first statement of the `weather_manual` node** (the node restarts from the beginning on resume, so anything before the interrupt re-runs), a conditional edge looping back for invalid input, and event emission through `app/events.py`
-- [ ] T108 [US4] Create `apps/api/agent/narrative.py` building the text-only `NarrativeContext` from a **field allow-list**, calling `gpt-4o-mini` with a 6 s timeout, validating the response into `{narrative, recommended_actions[]}` — a schema with **no verdict field to write into** — and falling back to the template path
-- [ ] T109 [US4] Create `apps/api/agent/report.py` assembling the report and writing the `reports` row with `narrative_status='pending'` **before** the model call, so a later narrative update touches narrative columns only
-- [ ] T110 [US4] Create `apps/api/app/routers/runs.py` with `POST /api/runs`, `GET /api/runs/{run_id}/stream` (SSE), `GET /api/runs/{run_id}/events`, `GET /api/runs/{run_id}/required-inputs`, `POST /api/runs/{run_id}/manual-inputs`, `GET /api/runs/{run_id}`, `GET /api/runs/{run_id}/report`, and `GET /api/runs`
-- [ ] T111 [US4] Run `pnpm generate` to regenerate `packages/contract`
-- [ ] T112 [US4] Create `apps/web/hooks/use-run-stream.ts` — an `EventSource` reducer maintaining checklist step status, findings, and the awaiting-input state
-- [ ] T113 [US4] Create `apps/web/components/report/AgentTimeline.tsx` with React Bits motion confined to the step timeline, which UX-003 explicitly permits
-- [ ] T114 [US4] Create `apps/web/components/report/ManualInputsDialog.tsx` driven by the server's field registry with React Hook Form + Zod built from that registry
-- [ ] T115 [US4] Create `apps/web/app/report/[runId]/page.tsx` — `VerdictBadge` rendered **statically with no `DecryptedText` reveal**, `RiskGauge`, the pass/fail checklist, ordered reasons, recommended actions, the annotated image, the export control from T127, the "Verdict computed by rules; explanation by AI" attribution, and `Disclaimer` (UX-005)
-- [ ] T116 [P] [US4] Add a Pytest test in `apps/api/tests/unit/test_report_early_write.py` — a narrative timeout leaves the persisted verdict, risk score, checklist, and reasons byte-identical
+- [x] T106 [P] [US4] Create `apps/api/agent/state.py` with the `GraphState` `TypedDict`
+- [x] T107 [US4] Create `apps/api/agent/graph.py` — the `StateGraph` with the five ordered steps, **`interrupt()` as the first statement of the `weather_manual` node** (the node restarts from the beginning on resume, so anything before the interrupt re-runs), a conditional edge looping back for invalid input, and event emission through `app/events.py`
+- [x] T108 [US4] Create `apps/api/agent/narrative.py` building the text-only `NarrativeContext` from a **field allow-list**, calling `gpt-4o-mini` with a 6 s timeout, validating the response into `{narrative, recommended_actions[]}` — a schema with **no verdict field to write into** — and falling back to the template path
+- [x] T109 [US4] Create `apps/api/agent/report.py` assembling the report and writing the `reports` row with `narrative_status='pending'` **before** the model call, so a later narrative update touches narrative columns only
+- [x] T110 [US4] Create `apps/api/app/routers/runs.py` with `POST /api/runs`, `GET /api/runs/{run_id}/stream` (SSE), `GET /api/runs/{run_id}/events`, `GET /api/runs/{run_id}/required-inputs`, `POST /api/runs/{run_id}/manual-inputs`, `GET /api/runs/{run_id}`, `GET /api/runs/{run_id}/report`, and `GET /api/runs`
+- [x] T111 [US4] Run `pnpm generate` to regenerate `packages/contract`
+- [x] T112 [US4] Create `apps/web/hooks/use-run-stream.ts` — an `EventSource` reducer maintaining checklist step status, findings, and the awaiting-input state
+- [x] T113 [US4] Create `apps/web/components/report/AgentTimeline.tsx` with React Bits motion confined to the step timeline, which UX-003 explicitly permits
+- [x] T114 [US4] Create `apps/web/components/report/ManualInputsDialog.tsx` driven by the server's field registry with React Hook Form + Zod built from that registry
+- [x] T115 [US4] Create `apps/web/app/report/[runId]/page.tsx` — `VerdictBadge` rendered **statically with no `DecryptedText` reveal**, `RiskGauge`, the pass/fail checklist, ordered reasons, recommended actions, the annotated image, the export control from T127, the "Verdict computed by rules; explanation by AI" attribution, and `Disclaimer` (UX-005)
+- [x] T116 [P] [US4] Add a Pytest test in `apps/api/tests/unit/test_report_early_write.py` — a narrative timeout leaves the persisted verdict, risk score, checklist, and reasons byte-identical
 
 **Checkpoint**: The demo's centrepiece works, and the report proves the verdict came from rules.
 
@@ -302,21 +302,21 @@ opens to the full report.
 
 ### Tests for User Story 5
 
-- [ ] T117 [P] [US5] Pytest contract test in `apps/api/tests/contract/test_history.py` — `GET /api/runs?verdict=` filters, and `GET /api/runs/latest` returns the dashboard summary
-- [ ] T118 [P] [US5] Pytest share test in `apps/api/tests/unit/test_share.py` — `POST /api/runs/{run_id}/share` is idempotent, `GET /api/share/{token}` exposes that report and no controls, and a token whose run is gone returns `410 SHARE_NOT_AVAILABLE` rather than a blank report
-- [ ] T119 [P] [US5] Vitest + RTL for the history table in `apps/web/tests/history.test.tsx` — verdict filtering and pagination
-- [ ] T120 [US5] Playwright e2e in `e2e/share.spec.ts` — generate a share link, open it in a fresh context, assert the report renders with no run controls and no listing of other runs
+- [x] T117 [P] [US5] Pytest contract test in `apps/api/tests/contract/test_history.py` — `GET /api/runs?verdict=` filters, and `GET /api/runs/latest` returns the dashboard summary
+- [x] T118 [P] [US5] Pytest share test in `apps/api/tests/unit/test_share.py` — `POST /api/runs/{run_id}/share` is idempotent, `GET /api/share/{token}` exposes that report and no controls, and a token whose run is gone returns `410 SHARE_NOT_AVAILABLE` rather than a blank report
+- [x] T119 [P] [US5] Vitest + RTL for the history table in `apps/web/tests/history.test.tsx` — verdict filtering and pagination
+- [x] T120 [US5] Playwright e2e in `e2e/share.spec.ts` — generate a share link, open it in a fresh context, assert the report renders with no run controls and no listing of other runs
 
 ### Implementation for User Story 5
 
-- [ ] T121 [P] [US5] Add `GET /api/runs` filtering and `GET /api/runs/latest` to `apps/api/app/routers/runs.py`
-- [ ] T122 [US5] Create `apps/api/app/routers/share.py` with `POST /api/runs/{run_id}/share` and `GET /api/share/{token}`, the latter returning a reduced read-only document with no controls
-- [ ] T123 [US5] Create `apps/web/components/report/RiskGauge.tsx` using `CountUp` — a permitted React Bits target — with the score banded and colour **never** the sole signal
-- [ ] T124 [US5] Create `apps/web/app/history/page.tsx` with a shadcn `Table`, a verdict filter, and pagination
-- [ ] T125 [US5] Create `apps/web/app/page.tsx` — the dashboard: an `Aurora` or `Threads` background via dynamic import, a `ShinyText` / `GradientText` hero, quick-action tiles, the latest verdict, `RiskGauge`, checklist status, and recent runs with skeletons while loading
-- [ ] T126 [US5] Create `apps/web/app/share/[token]/page.tsx` rendering the read-only report, including the `410` not-available state
-- [ ] T127 [US5] Extend the print stylesheet in `apps/web/app/globals.css` so the report is legible in black and white, and add a print action on the report page
-- [ ] T128 [US5] Run `pnpm generate` to regenerate `packages/contract`
+- [x] T121 [P] [US5] Add `GET /api/runs` filtering and `GET /api/runs/latest` to `apps/api/app/routers/runs.py`
+- [x] T122 [US5] Create `apps/api/app/routers/share.py` with `POST /api/runs/{run_id}/share` and `GET /api/share/{token}`, the latter returning a reduced read-only document with no controls
+- [x] T123 [US5] Create `apps/web/components/report/RiskGauge.tsx` using `CountUp` — a permitted React Bits target — with the score banded and colour **never** the sole signal
+- [x] T124 [US5] Create `apps/web/app/history/page.tsx` with a shadcn `Table`, a verdict filter, and pagination
+- [x] T125 [US5] Create `apps/web/app/page.tsx` — the dashboard: an `Aurora` or `Threads` background via dynamic import, a `ShinyText` / `GradientText` hero, quick-action tiles, the latest verdict, `RiskGauge`, checklist status, and recent runs with skeletons while loading
+- [x] T126 [US5] Create `apps/web/app/share/[token]/page.tsx` rendering the read-only report, including the `410` not-available state
+- [x] T127 [US5] Extend the print stylesheet in `apps/web/app/globals.css` so the report is legible in black and white, and add a print action on the report page
+- [x] T128 [US5] Run `pnpm generate` to regenerate `packages/contract`
 
 **Checkpoint**: All six user stories are independently functional and demonstrable.
 
@@ -332,16 +332,16 @@ turn and confirm the expected verdict, annotated image, reasons, and report.
 
 ### Tests for User Story 6
 
-- [ ] T129 [P] [US6] Pytest offline scenario test in `apps/api/tests/e2e/test_demo_scenarios.py` — all three scenarios yield GO / HOLD / NO-GO with `no_network` enforced, using the template report path
-- [ ] T130 [P] [US6] Pytest cold-start test in `apps/api/tests/e2e/test_cold_start.py` — with an empty store, all three scenarios still produce their expected verdicts (NFR-007, SC-001)
-- [ ] T131 [US6] Playwright e2e in `e2e/demo-scenarios.spec.ts` — the three scenarios produce GO, HOLD, and NO-GO in sequence, 10 consecutive passes (SC-001)
+- [x] T129 [P] [US6] Pytest offline scenario test in `apps/api/tests/e2e/test_demo_scenarios.py` — all three scenarios yield GO / HOLD / NO-GO with `no_network` enforced, using the template report path
+- [x] T130 [P] [US6] Pytest cold-start test in `apps/api/tests/e2e/test_cold_start.py` — with an empty store, all three scenarios still produce their expected verdicts (NFR-007, SC-001)
+- [x] T131 [US6] Playwright e2e in `e2e/demo-scenarios.spec.ts` — the three scenarios produce GO, HOLD, and NO-GO in sequence, 10 consecutive passes (SC-001)
 
 ### Implementation for User Story 6
 
-- [ ] T132 [US6] Seed `demo_scenarios` in `apps/api/db/repo.py` with `normal`, `misaligned_fin`, and `person_near_pad`, each carrying complete `manual_inputs_json` so a demo never pauses
-- [ ] T133 [US6] Create `apps/api/app/routers/demo.py` with `GET /api/demo/scenarios` and `POST /api/demo/scenarios/{key}/run`, the latter entering the identical pipeline a real run uses (FR-036)
-- [ ] T134 [US6] Create `apps/web/components/demo/DemoScenarioMenu.tsx` on the dashboard and the inspection page, showing each scenario's expected verdict as metadata
-- [ ] T135 [US6] Run `pnpm generate` to regenerate `packages/contract`
+- [x] T132 [US6] Seed `demo_scenarios` in `apps/api/db/repo.py` with `normal`, `misaligned_fin`, and `person_near_pad`, each carrying complete `manual_inputs_json` so a demo never pauses
+- [x] T133 [US6] Create `apps/api/app/routers/demo.py` with `GET /api/demo/scenarios` and `POST /api/demo/scenarios/{key}/run`, the latter entering the identical pipeline a real run uses (FR-036)
+- [x] T134 [US6] Create `apps/web/components/demo/DemoScenarioMenu.tsx` on the dashboard and the inspection page, showing each scenario's expected verdict as metadata
+- [x] T135 [US6] Run `pnpm generate` to regenerate `packages/contract`
 
 **Checkpoint**: The three-scenario demo is reliable and offline.
 
@@ -349,16 +349,16 @@ turn and confirm the expected verdict, annotated image, reasons, and report.
 
 ## Phase 9: Polish & Cross-Cutting Concerns
 
-- [ ] T136 [P] Accessibility pass — keyboard operability, focus rings, `aria-live` on status changes, WCAG AA contrast in the dark theme **and** in black-and-white print, and `prefers-reduced-motion` disabling every decorative animation across the five UX-004 screens; all five usable at 1280px with no horizontal scrolling (Constitution 4.VI, FR-041, FR-042, UX-004, SC-009)
-- [ ] T137 [P] Hedging and disclaimer audit — assert `Disclaimer` from `apps/web/components/verdict/Disclaimer.tsx` renders on all five UX-004 screens (`apps/web/app/page.tsx`, `apps/web/app/inspect/page.tsx`, `apps/web/app/monitor/page.tsx`, `apps/web/app/report/[runId]/page.tsx`, `apps/web/app/history/page.tsx`), and add a Vitest case in `apps/web/tests/hedged.test.ts` that fails on the banned certainty words and certification claims in `apps/web/lib/hedged.ts` (FR-037, FR-038, UX-004, SH-004, SH-005)
-- [ ] T138 [P] Secrets audit — assert `OPENAI_API_KEY` appears only in `apps/api/.env.example` and `.env.example`, never in a `NEXT_PUBLIC_*` variable and never in the built `apps/web` bundle (Constitution 5.III)
-- [ ] T139 [P] React Bits boundary audit — add a Vitest case in `apps/web/tests/react-bits-boundary.test.tsx` asserting no component under `apps/web/components/react-bits/` is rendered inside `apps/web/components/verdict/VerdictBadge.tsx`, `apps/web/components/verdict/SeverityIndicator.tsx`, `apps/web/components/verdict/Disclaimer.tsx`, or `apps/web/components/inspection/FindingList.tsx` (Constitution 4.III)
-- [ ] T140 Empty, error, and loading states for every screen, an `apps/web/app/error.tsx` boundary, and toasts via `sonner`
-- [ ] T141 Performance pass in `apps/web/app/page.tsx` and `apps/web/components/monitor/LiveStatusBanner.tsx` — lazy-load heavy React Bits via `next/dynamic`, downscale uploads client-side in `apps/web/lib/upload.ts`, and confirm the dashboard reaches a Lighthouse score of 90 while the live monitor sustains 2 analysed frames per second under 1.5 s end-to-end latency (NFR-001, NFR-002, SC-005, SC-006)
-- [ ] T142 [P] Fill any coverage gaps in `apps/api/tests/unit/` and `apps/web/tests/`, confirming every CV module still has both a `__pass` and a `__fail` fixture
-- [ ] T143 Write `README.md` with the architecture diagram, screenshots, the 90-second demo script, and an honest limitations section
-- [ ] T144 Write `PITCH.md` — "An AI co-pilot for low-cost rocket safety inspection." — with the 3-scenario live demo order GO → HOLD → NO-GO
-- [ ] T145 Run the full `quickstart.md` validation end to end and record the result in the PR
+- [x] T136 [P] Accessibility pass — keyboard operability, focus rings, `aria-live` on status changes, WCAG AA contrast in the dark theme **and** in black-and-white print, and `prefers-reduced-motion` disabling every decorative animation across the five UX-004 screens; all five usable at 1280px with no horizontal scrolling (Constitution 4.VI, FR-041, FR-042, UX-004, SC-009)
+- [x] T137 [P] Hedging and disclaimer audit — assert `Disclaimer` from `apps/web/components/verdict/Disclaimer.tsx` renders on all five UX-004 screens (`apps/web/app/page.tsx`, `apps/web/app/inspect/page.tsx`, `apps/web/app/monitor/page.tsx`, `apps/web/app/report/[runId]/page.tsx`, `apps/web/app/history/page.tsx`), and add a Vitest case in `apps/web/tests/hedged.test.ts` that fails on the banned certainty words and certification claims in `apps/web/lib/hedged.ts` (FR-037, FR-038, UX-004, SH-004, SH-005)
+- [x] T138 [P] Secrets audit — assert `OPENAI_API_KEY` appears only in `apps/api/.env.example` and `.env.example`, never in a `NEXT_PUBLIC_*` variable and never in the built `apps/web` bundle (Constitution 5.III)
+- [x] T139 [P] React Bits boundary audit — add a Vitest case in `apps/web/tests/react-bits-boundary.test.tsx` asserting no component under `apps/web/components/react-bits/` is rendered inside `apps/web/components/verdict/VerdictBadge.tsx`, `apps/web/components/verdict/SeverityIndicator.tsx`, `apps/web/components/verdict/Disclaimer.tsx`, or `apps/web/components/inspection/FindingList.tsx` (Constitution 4.III)
+- [x] T140 Empty, error, and loading states for every screen, an `apps/web/app/error.tsx` boundary, and toasts via `sonner`
+- [x] T141 Performance pass in `apps/web/app/page.tsx` and `apps/web/components/monitor/LiveStatusBanner.tsx` — lazy-load heavy React Bits via `next/dynamic`, downscale uploads client-side in `apps/web/lib/upload.ts`, and confirm the dashboard reaches a Lighthouse score of 90 while the live monitor sustains 2 analysed frames per second under 1.5 s end-to-end latency (NFR-001, NFR-002, SC-005, SC-006)
+- [x] T142 [P] Fill any coverage gaps in `apps/api/tests/unit/` and `apps/web/tests/`, confirming every CV module still has both a `__pass` and a `__fail` fixture
+- [x] T143 Write `README.md` with the architecture diagram, screenshots, the 90-second demo script, and an honest limitations section
+- [x] T144 Write `PITCH.md` — "An AI co-pilot for low-cost rocket safety inspection." — with the 3-scenario live demo order GO → HOLD → NO-GO
+- [x] T145 Run the full `quickstart.md` validation end to end and record the result in the PR
 
 ---
 

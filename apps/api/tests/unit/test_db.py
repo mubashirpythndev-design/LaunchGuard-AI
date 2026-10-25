@@ -230,4 +230,3 @@ async def test_unique_constraints(test_session: AsyncSession) -> None:
     with pytest.raises(IntegrityError):
         await test_session.flush()
     await test_session.rollback()
-
